@@ -1,0 +1,194 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{c4504002-e3c0-42b6-ba7a-51f9cbf15efb}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>__init__.py</StartupFile>
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId />
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="big.txt" />
+    <Content Include="Programs\README.md" />
+    <Content Include="sql\objects\__pycache__\Connection.cpython-36.pyc" />
+    <Content Include="sql\objects\__pycache__\Table.cpython-36.pyc" />
+    <Content Include="sql\objects\__pycache__\View.cpython-36.pyc" />
+    <Content Include="sql\objects\__pycache__\__init__.cpython-36.pyc" />
+    <Content Include="tests\exceltests.json" />
+    <Content Include="tkinter\images\allogo.png" />
+    <Content Include="tkinter\images\buttoncover.png" />
+    <Content Include="tkinter\images\dice.png" />
+    <Content Include="tkinter\images\dragon.png" />
+    <Content Include="tkinter\images\equation.png" />
+    <Content Include="tkinter\images\gnoll.png" />
+    <Content Include="tkinter\images\left.png" />
+    <Content Include="tkinter\images\NavTop.png" />
+    <Content Include="tkinter\images\noimages.png" />
+    <Content Include="tkinter\images\rawdragon.png" />
+    <Content Include="tkinter\images\rawgnoll.png" />
+    <Content Include="tkinter\images\right.png" />
+    <Content Include="tkinter\images\shield.png" />
+    <Content Include="tkinter\images\surface.png" />
+    <Content Include="tkinter\images\sword.png" />
+    <Content Include="tkinter\images\swordnshield.png" />
+    <Content Include="tkinter\images\tabactive - Copy.png" />
+    <Content Include="tkinter\images\tabactive.png" />
+    <Content Include="tkinter\images\tabinactive - Copy.png" />
+    <Content Include="tkinter\images\tabinactive.png" />
+    <Content Include="tkinter\images\tabsurface.png" />
+    <Content Include="tkinter\to convert\stats2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="alconstants.py" />
+    <Compile Include="axml.py" />
+    <Compile Include="constants.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="decorators.py" />
+    <Compile Include="directoryinfo.py" />
+    <Compile Include="emailer.py" />
+    <Compile Include="excel.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="filemodules.py" />
+    <Compile Include="gaming\dice\regexdice.py" />
+    <Compile Include="gaming\dice\__init__.py" />
+    <Compile Include="gaming\util.py" />
+    <Compile Include="gaming\__init__.py" />
+    <Compile Include="graphql_query.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="gtk\mvc.py" />
+    <Compile Include="gtk\__init__.py" />
+    <Compile Include="images.py" />
+    <Compile Include="measurement.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="messenger.py" />
+    <Compile Include="methods.py" />
+    <Compile Include="mvc.py" />
+    <Compile Include="nestparser.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="NOSql\objects.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="NoSql\tests\test_core.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="NoSql\tests\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="NOSql\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Programs\FileNameRemover.py" />
+    <Compile Include="Programs\SQLExplorer.py" />
+    <Compile Include="Programs\sqlscratchpad.py" />
+    <Compile Include="Programs\SymLinkUtility.py" />
+    <Compile Include="spellingcorrector.py" />
+    <Compile Include="sql\constants.py" />
+    <Compile Include="sql\engine.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="sql\newparser.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="sql\objects\Connection.py" />
+    <Compile Include="sql\objects\graphdb.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="sql\objects\Table.py" />
+    <Compile Include="sql\objects\Utilities.py" />
+    <Compile Include="sql\objects\View.py" />
+    <Compile Include="sql\objects\__init__.py" />
+    <Compile Include="sql\virtual.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="sql\__init__.py" />
+    <Compile Include="subclasses.py" />
+    <Compile Include="tests\exceltests.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\graphql_querytests.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\methodstests.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\nestparser.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="sql\tests\sqltest.py" />
+    <Compile Include="sql\tests\sql_newparsertest.py" />
+    <Compile Include="tests\subclasses.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\test_measurment.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\texttable.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\versiontests.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\web.py" />
+    <Compile Include="tests\__init__.py" />
+    <Compile Include="texttable.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tkinter\adanotebook.py" />
+    <Compile Include="tkinter\adaptedcanvas.py" />
+    <Compile Include="tkinter\adaptedlistbox.py" />
+    <Compile Include="tkinter\adaptedtoplevel.py" />
+    <Compile Include="tkinter\advancedtkinter.py" />
+    <Compile Include="tkinter\autocompleteentry.py" />
+    <Compile Include="tkinter\autocompletetext.py" />
+    <Compile Include="tkinter\collapsibleframe-edited.py" />
+    <Compile Include="tkinter\collapsibleframe.py" />
+    <Compile Include="tkinter\colorpicker.py" />
+    <Compile Include="tkinter\horizontalscrolledframe.py" />
+    <Compile Include="tkinter\smarttkinter.py" />
+    <Compile Include="tkinter\smartttk.py" />
+    <Compile Include="tkinter\style.py" />
+    <Compile Include="tkinter\tkinterimagemods.py" />
+    <Compile Include="tkinter\tkintersprites.py" />
+    <Compile Include="tkinter\widgets.py" />
+    <Compile Include="tkinter\__init__.py" />
+    <Compile Include="trig.py" />
+    <Compile Include="web.py" />
+    <Compile Include="winregistry.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="__init__.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="gaming" />
+    <Folder Include="gaming\dice" />
+    <Folder Include="gtk" />
+    <Folder Include="NOSql\" />
+    <Folder Include="NOSql\tests\" />
+    <Folder Include="Programs\" />
+    <Folder Include="sql" />
+    <Folder Include="sql\tests\" />
+    <Folder Include="sql\objects\" />
+    <Folder Include="sql\objects\__pycache__\" />
+    <Folder Include="tests" />
+    <Folder Include="tkinter" />
+    <Folder Include="tkinter\images" />
+    <Folder Include="tkinter\to convert" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+</Project>
