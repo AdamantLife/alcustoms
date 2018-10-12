@@ -88,6 +88,18 @@ class SmartFrame(ttk.Frame):
             kw['style'] = parent.cget("style")
         return super().__init__(parent,**kw)
 
+    def masspack(self,**kw):
+        """ A shortcut method for calling smarttkinter.masspack on this SmartFrame. Additional KWargs should be identical to masspack """
+        masspack(self,**kw)
+
+    def massgrid(self,**kw):
+        """ A shortcut method for calling smarttkinter.massgrid on this SmartFrame. Additional KWargs should be identical to massgrid """
+        massgrid(self,**kw)
+
+    def clear(self):
+        """ Functions as smarttkinter.clearwidget: destroys all widgets contained in this SmartFrame. """
+        clearwidget(self)
+
 class SmartTreeview(SmartFrame):
     COLUMNRE = re.compile("""#?(?P<columnindex>\d+)""")
     def __init__(self, master = None, framekw = {}, autosetup=True, plugins = None, **kw):
@@ -472,3 +484,5 @@ class SequenceButton(ttk.Button):
             self.index = 0
         configuration = self.parseconfig(self.commandlist[self.index])
         self.configure(**configuration)
+
+from alcustoms.tkinter.smarttkinter import clearwidget,masspack,massgrid
