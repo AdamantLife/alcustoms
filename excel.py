@@ -3,7 +3,7 @@ import collections
 import re
 ## Third Party
 from openpyxl import *
-import openpyxl.worksheet.table
+import openpyxl.worksheet.table, openpyxl.worksheet.worksheet
 from openpyxl import utils
 
 ## A keyfactory for removing spaces and lowercasing Headers for EnhancedTable.todicts()
@@ -610,7 +610,7 @@ class EnhancedTable(openpyxl.worksheet.table.Table):
         return self.range.subrange(None,(str(headerlength-1),str(columnlength-1)))
 
     def datarange(self):
-        """ Returns the Table's headers as a Range object """
+        """ Returns the Table's body as a Range object """
         headerlength = self.headerRowCount
         columnlength = len(self.tableColumns)
         return self.range.subrange(
@@ -645,3 +645,18 @@ def get_all_tables(workbook):
             else:
                 out.append((worksheet,EnhancedTable.from_table(table,worksheet)))
     return out
+
+def get_table_by_name(worksheet,name):
+    """ Returns the table with the given displayName.
+
+        Workbooks that have duplicate tables are considered Invalid by Excel,
+        so if this method finds multiple tables with the given displayName it
+        will raise a ValueError.
+    """
+    if not isinstance(worksheet,openpyxl.worksheet.worksheet.Worksheet):
+        raise TypeError("worksheet should be a Worksheet object")
+    if not isinstance(name,str):
+        raise TypeError("name should be a string")
+    for table in worksheet._tables:
+        if table.displayName == name:
+            return table
