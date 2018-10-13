@@ -3,7 +3,7 @@ import collections
 import re
 ## Third Party
 from openpyxl import *
-import openpyxl.worksheet.table
+import openpyxl.worksheet.table, openpyxl.worksheet.worksheet
 from openpyxl import utils
 
 ## A keyfactory for removing spaces and lowercasing Headers for EnhancedTable.todicts()
@@ -610,7 +610,7 @@ class EnhancedTable(openpyxl.worksheet.table.Table):
         return self.range.subrange(None,(str(headerlength-1),str(columnlength-1)))
 
     def datarange(self):
-        """ Returns the Table's headers as a Range object """
+        """ Returns the Table's body as a Range object """
         headerlength = self.headerRowCount
         columnlength = len(self.tableColumns)
         return self.range.subrange(
@@ -645,3 +645,94 @@ def get_all_tables(workbook):
             else:
                 out.append((worksheet,EnhancedTable.from_table(table,worksheet)))
     return out
+
+def get_table_by_name(worksheet,name):
+    """ Returns the table with the given displayName.
+
+        Workbooks that have duplicate tables are considered Invalid by Excel,
+        so if this method finds multiple tables with the given displayName it
+        will raise a ValueError.
+    """
+    if not isinstance(worksheet,openpyxl.worksheet.worksheet.Worksheet):
+        raise TypeError("worksheet should be a Worksheet object")
+    if not isinstance(name,str):
+        raise TypeError("name should be a string")
+    for table in worksheet._tables:
+        if table.displayName == name:
+            return table
+
+def dicts_to_table(sheet, dinput, tablename = None, start = None, headers = None):
+    """ Writes a list of dictionaries or lists into a Table.
+  
+        sheet should be a Worksheet.
+        dinput should be a list of either lists or dictionaries.
+        If provided, tablename should be a string. If the tablename is defined
+        within the worksheet, then all rows in the given table will be replaced
+        with dinput.
+        If provided, start should be a valid coordinate to place the table. It is
+        a SyntaxError to supply both an existing tablename and start and a ValueError
+        to supply neither.
+        headers should be a list of strings. headers is optional if dinput is a
+        list of dicts. If so, then only the given keys will be outputted from dinput.
+        If dinput is a list and tablename is not an existing table, then headers is
+        required. Otherwise (dinput is a list and tablename exists), then headers is
+        ignored.
+    """
+    if not isinstance(sheet,openpyxl.worksheet.worksheet.Worksheet):
+        raise TypeError('sheet must be a worksheet')
+    if not isinstance(dinput,(list,tuple)) or not all(isinstance(item,(dict,list,tuple)) for item in dinput):
+        raise TypeError('dinput should be a list of lists or dicts')
+    t1 = dinput[0].__class__
+    if any(not isinstance(item,t1.__class__) for item in dinput):
+        raise TypeError("All dinputs must be the same class")
+    if tablename is None: tablename = ""
+    if not isinstance(tablename,str):
+        raise TypeError('If supplied, tablename should be a string')
+    table = None
+    if tablename:
+        table = gettablebyname(sheet,tablename)
+
+    if start:
+        start = Coordinate(start)
+        if table and table.startcoord != start:
+            raise SyntaxError("Cannot supply both an existing table and start")
+    elif table:
+        start = table.startcoord
+    ## Not start and not table
+    else:
+        raise ValueError("dicts_to_table requires either start or an existing tablename")
+
+    if headers:
+        if not isinstance(headers,(list,tuple)) or any(not isinstance(item,str) for item in headers):
+            raise ValueError("headers should be a string")
+        ## Ignore headers if existing table
+        if table: headers = None
+
+    ## Normalize Output
+    if headers is None:
+        if table:
+            headers = table.headers()
+
+    ## Normalize dinput structure
+    if issubclass(t1,dict):
+        if headers is None:
+            iheaders = list(itertools.chain.from_iterable([item.keys() for item in dinput]))
+            ## Instead of using set, we're going to attempt to conserve at least some of the order of the keys
+            ## (at time of writing, all standard dicts memorize input order of keys, which makes them reliable)
+            headers = []
+            for h in iheaders:
+                if h not in headers: headers.append(h)
+        dinput = [[item.get(key,"") for key in headers] for item in dinput]
+    ## Otherwise, dinput items are lists or tuples (or- theoretically- subclasses), so don't do anything
+    
+    ## If existing table, remove it and rewrite it
+    ## TODO: we should probably make some attempt to NOT overwrite data in proximity if table extends beyond original constraints
+
+    ## Write Header row
+
+    ## Write table data
+    for roffset,row in enumerate(dinput):
+        for coffset,column in enumerate(headers):
+
+    ## Add/Readd Table to sheet
+    

@@ -5,7 +5,6 @@ import tkinter as tk
 import tkinter.scrolledtext as tkscrolledtext
 ## This Module
 from alcustoms import methods as alcmethods
-from alcustoms.tkinter import smartttk as ttk
 
 def alresize(win):
     win.update_idletasks()
@@ -143,6 +142,8 @@ def setentry(widget,text=''):
         widget.state(startstate)
     else:
         widget['state']=startstate
+
+from alcustoms.tkinter import smartttk as ttk
 
 class GeometryMixin():
     """ A Mixin for Tkinter Widgets which provides Geometry Convenience Functions """

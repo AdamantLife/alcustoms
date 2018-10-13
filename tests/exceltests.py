@@ -240,6 +240,18 @@ class MethodCase(unittest.TestCase):
         r1,c1 = 2,3
         self.assertEqual(excel.gettablesize(sheet,c1,r1),"C2:F15")
 
+    def test_get_table_by_name(self):
+        """ Basic Tests for get_table_by_name """
+        basicsetup(self)
+        sheet = self.sheet_Tables1
+        name = 'testtable_1'
+        table = excel.get_table_by_name(sheet,name)
+        self.assertIsInstance(table,excel.openpyxl.worksheet.table.Table)
+        import collections
+        self.assertEqual(dict(a = 1),collections.OrderedDict([("a",1),]))
+        dicts = excel.EnhancedTable.from_table(table,sheet).todicts()
+        self.assertEqual(excel.EnhancedTable.from_table(table,sheet).todicts(),[["Name","Value"],dict(Name="Hello",Value = 1),dict(Name="World",Value=2)])
+
 
 if __name__ == "__main__":
     unittest.main()
