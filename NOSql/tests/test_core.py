@@ -15,6 +15,9 @@ import traceback
 from xml.etree import ElementTree
 import pathlib
 
+## Sister Module
+from alcustoms import sql
+
 DBPATH = pathlib.Path("test.aldb").resolve()
 
 ## Random TestCase-Bad Values (No TestCase should have these values as keys)
@@ -198,19 +201,19 @@ class KeyValueCacheCase2(unittest.TestCase):
     def setUp(self):
         if DBPATH.exists():
             DBPATH.unlink()
+        self.db = NOSql.Database(DBPATH)
         return super().setUp()
 
     def test_serialize_deserialize(self):
         """ Tests that a basic KeyValueCache can be serialized and reloaded """
-        db = NOSql.Database(DBPATH)
 
         ## Original Cache
-        cache1 = db.addCache("Names")
+        cache1 = self.db.addCache("Names")
         ## Miscellaneous, Json-Serializable values
         for value in ["a",1,1.2,dict(a=1),[1,2]]:
             cache1.insert(value)
 
-        db.save()
+        self.db.save()
         db = NOSql.Database(DBPATH)
         cache2 = db.cache("Names")
 
@@ -219,7 +222,64 @@ class KeyValueCacheCase2(unittest.TestCase):
                 self.assertTrue(hasattr(cache1,attr))
                 self.assertTrue(hasattr(cache2,attr))
                 self.assertEqual(getattr(cache1,attr),getattr(cache2,attr))
-        
+
+class SqliteCacheCase(unittest.TestCase):
+    def failskip(func):
+        """ A Decorator to skip tests if the initial setup fails """
+        @functools.wraps(func)
+        def inner(self,*args,**kw):
+            try:
+                ## Will fail if self.cache was not set or is not a SqliteCache
+                assert isinstance(self.cache,NOSql.SqliteCache)
+            except:
+                return
+            return func(self,*args,**kw)
+        return inner
+
+    def setUp(self):
+        self.db = NOSql.Database(":memory:")
+        self.cache = self.db.addCache("sqlite","sqlite3")
+        return super().setUp()
+
+    def test_addCache(self):
+        """ Tests that the sqlite db was properly loaded """
+        cache = self.db.cache("sqlite")
+        self.assertEqual(cache,self.cache)
+        self.assertIsInstance(cache,NOSql.SqliteCache)
+
+    def test_database_usage(self):
+        """ Tests that the Cache (connection) can be interfaced like a normal sqlite database """
+        self.cache.execute("""CREATE TABLE testtable(name);""")
+
+        self.cache.row_factory = sql.dict_factory
+        tables = self.cache.execute("""SELECT name FROM sqlite_master WHERE type='table';""").fetchall()
+        self.assertIn("testtable",[table['name'] for table in tables])
+        ## This is just error checking...
+        self.cache.commit()
+        self.cache.close()
+
+class SqliteCacheCase(unittest.TestCase):
+    """ SqliteCache Tests with a physical file """
+    def setUp(self):
+        if DBPATH.exists():
+            DBPATH.unlink()
+        self.db = NOSql.Database(DBPATH)
+        return super().setUp()
+
+    def test_serialize_deserialize(self):
+        """ Tests that the SqliteCache can be serialized and then deserialized correctly """
+        cache = self.db.addCache("db",cachetype = "sqlite3")
+        cache.execute("""CREATE TABLE testtable(name);""")
+        cache.execute("""INSERT INTO testtable (name) VALUES ("a"),("b");""")
+        ## db.save => cache.serialize => cache.commit(); cache.close()
+        self.db.save()
+
+        db = NOSql.Database(DBPATH)
+        cache2 = db.cache("db")
+
+        self.assertIsInstance(cache2,NOSql.SqliteCache)
+
+
 
 
 if __name__ == "__main__":

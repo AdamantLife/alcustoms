@@ -2,7 +2,12 @@
 from alcustoms import sql
 from alcustoms.sql import constants,objects
 from alcustoms.sql.objects import Table, Connection, Utilities, View
+
+## Testing Framework
 import unittest
+
+## Testing  Utils
+from alcustoms.sql.tests import utils
 
 ## Builtin
 import collections
@@ -10,133 +15,24 @@ import itertools
 import re
 
 
-############################################################################
-"""                           HELPER UTILITIES                           """
-############################################################################
-TESTTABLESQL = """CREATE TABLE testtable(name TEXT, value INTEGER)"""
-def gettesttableconstructor():
-    return Table.TableConstructor("testtable",columns = dict(name="TEXT",value="INTEGER"))
-def setupconnection(testcase):
-    """ Creates a new database on testcase with 'testtable' table """
-    testcase.connection = Connection.Database(file = ":memory:")
-    testcase.connection.execute(TESTTABLESQL)
-
-def populatetesttable(testcase):
-    """ Sets what rows are in the testtable """
-    testcase.connection.execute(""" DELETE FROM testtable;""")
-    testcase.connection.execute(""" INSERT INTO testtable (name,value) VALUES ("Hello",1),("World",2);""")
-
-TESTTABLESQL2 = """CREATE TABLE testtable2(forgnid INT REFERENCES testtable(rowid), myname TEXT);"""
-TESTTABLESQL3 = """CREATE TABLE testtable3(myid INTEGER PRIMARY KEY, myvalue BOOLEAN);"""
-TESTTABLESQL4 = """CREATE TABLE IF NOT EXISTS testtable4 (defaultvalue TEXT default "Hello World", uniquevalue BLOB UNIQUE, checkevenvalue INT CHECK(checkevenvalue % 2 = 0));"""
-def setupadditionaltables(testcase):
-    """ Adds additional tables for further testing """
-    testcase.connection.execute(TESTTABLESQL2)
-    testcase.connection.execute(TESTTABLESQL3)
-    testcase.connection.execute(TESTTABLESQL4)
-    testcase.testtables = [Table.Table(TESTTABLESQL),Table.Table(TESTTABLESQL2),Table.Table(TESTTABLESQL3),Table.Table(TESTTABLESQL4)]
-
-def populatetesttable3(testcase):
-    """ Sets what rows are in testtable3 """
-    testcase.connection.execute(""" DELETE FROM testtable3;""")
-    testcase.connection.execute(""" INSERT INTO testtable3 (myvalue) VALUES (1),(0),(0),(1);""")
-def populatetesttable4(testcase):
-    """ Sets what rows are in testtable4 """
-    testcase.connection.execute(""" DELETE FROM testtable4;""")
-    testcase.connection.execute(""" INSERT INTO testtable4 (uniquevalue, checkevenvalue) VALUES ("a",0),("b",2),("c",4),("d",6); """)
-
-def populatealltables(testcase):
-    """ Runs all available populatetesttable[x] commands """
-    populatetesttable(testcase)
-    populatetesttable3(testcase)
-    populatetesttable4(testcase)
-
-USERTABLESQL = """CREATE TABLE users (userid INTEGER PRIMARY KEY, fname TEXT, lname TEXT, email TEXT UNIQUE);"""
-SECURITYTABLESQL = """CREATE TABLE notsecurity (userid INT REFERENCES users(userid) NOT NULL UNIQUE, salt BLOB NOT NULL, hash BLOB NOT NULL);"""
-TOKENTABLESQL = """CREATE TABLE tokens (userid INT REFERENCES users(userid) NOT NULL UNIQUE ON CONFLICT REPLACE, token BLOB NOT NULL, issued TEXT NOT NULL);"""
-POSTSTABLESQL = """CREATE TABLE posts (postid INTEGER PRIMARY KEY, userid INT REFERENCES users(userid) NOT NULL, posttime TEXT NOT NULL, post BLOB NOT NULL, tags BLOB);"""
-COMMENTSTABLESQL = """CREATE TABLE comments (commentid INTEGER PRIMARY KEY, uid INT REFERENCES users(userid), pid INT REFERENCES posts(postid), commenttime TEXT NOT NULL, replyto INT REFERENCES comments(commentid), comment NOT NULL);"""
-
-ADVANCEDROWS = [
-    ["users",[
-        dict(fname = "John", lname = "Doe", email = "jdoe2@email.internet"),dict(fname = "Jane", lname = "Doe", email = "jdoe@email.internet"),dict(fname = "Alice", lname = "Bob", email = "aliceisbestice@fraud.email"),dict(fname = "Carol", lname = "David", email = "crazycarol@altacct.com"),]
-     ],
-     ["notsecurity",[
-         dict(userid=1,salt=1234,hash="ABCDEF"),dict(userid=2,salt=1234,hash="GHIJKL"),dict(userid=3,salt=1234,hash="MNOPQR"),dict(userid=4,salt=1234,hash="STUVWX"),]
-      ],
-      ["tokens",[
-          dict(userid = 1, token = "alpha", issued = "19871208T0000+0000"),dict(userid = 2, token = "beta", issued = "17760704T1200-0500"),dict(userid = 3, token = "moe", issued = "19000726T0000+0600"),dict(userid = 4, token = "greyfacenospace", issued = "20110606T1337-0800"),]
-       ],
-       ["posts",[
-           dict(userid=1, posttime = "20160101T0000+0000", post="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin vitae ullamcorper arcu.", tags = "blog daily life"),dict(userid=1, posttime = "20160102T0000+0000", post="Ut euismod, velit quis accumsan pharetra, nulla libero tempus eros, nec pellentesque orci dolor ut nulla. Integer pretium quam eu leo tempus consequat.", tags = "blog daily life"),
-           dict(userid=3, posttime = "20160430T2245+0600", post="Ur Waifu is Trash.\n\nRead Here: bee5.biz/s1k3", tags = "alice amazing anime best bestgril camgirls celebrity cg cheats codes download exploit fake free gltch google guns hacks hollywood illuminati lifehack list lizardpeople money motorcycles nudes online photo playstation porn prank ranking real save tanks tape topten trucks video vines win waifu xbox xtreme xxx youtube"),dict(userid=3, posttime = "20160430T2300+0600", post="Why Flat is Justice: A Treatise\n\nRead Here: bee5.biz/3d551", tags = "alice amazing anime best bestgril camgirls celebrity cg cheats codes download exploit fake free gltch google guns hacks hollywood illuminati lifehack list lizardpeople money motorcycles nudes online photo playstation porn prank ranking real save tanks tape topten trucks video vines win waifu xbox xtreme xxx youtube"),dict(userid=3, posttime = "20160430T2315+0600", post="Abandon Your Tropey Cardboard Fanservice Waifus and Join the Cult of Alice\n\nRead Here: bee5.biz/ef5a6fe", tags = "alice amazing anime best bestgril camgirls celebrity cg cheats codes download exploit fake free gltch google guns hacks hollywood illuminati lifehack list lizardpeople money motorcycles nudes online photo playstation porn prank ranking real save tanks tape topten trucks video vines win waifu xbox xtreme xxx youtube"),
-           dict(userid=1, posttime = "20160610T0500+0000", post="Praesent vehicula nibh sed pulvinar aliquet. In et massa ut metus laoreet placerat. Praesent sollicitudin, massa eget laoreet tempor, ligula enim blandit augue, eget convallis nibh elit viverra velit. Morbi vel lectus turpis.", tags = "blog life"),
-           dict(userid=1, posttime = "20170101T0010+0000", post="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin vitae ullamcorper arcu.", tags = "blog stuff"),]
-        ],
-        ["comments",[
-            dict(uid = 1, pid = 1, commenttime = "20160101T0001+0000", replyto = None, comment = "Thanks for reading, Everyone! It's my New Year's Resolution to write a post a day! Look forward to it!"),dict(uid = 1, pid = 2, commenttime = "20160102T0001+0000", replyto = None, comment = """Second post is up! Wasn't really sure what to write today, so I just kinda did a "Stream of Consciousness" thing: I hope that you all like it! Thanks again!"""),
-            dict(uid = 1, pid = 3, commenttime = "20160430T1646+0000", replyto = None, comment = "Oh! Hi! Welcome to the forums! I don't really understand alot of what you said in your post, but I'm glad to see how passionate you are about it :) Hope you keep posting"),dict(uid = 1, pid = 4, commenttime = "20160430T1701+0000", replyto = None, comment = "Wow, you're really on a roll! I like your writing style :) It's very unique!"),dict(uid = 1, pid = 5, commenttime = "20160430T1716+0000", replyto = None, comment = "Y'know, I've been thinking for a while that I need to get back to my blog posts :-/... And you're inspiring me to do it :D\nDo you think you could give me some feedback on my posts? I think that would really help me figure out what I want to write about ^_^ <3"),
-            dict(uid = 1, pid = 6, commenttime = "20160610T0500+0000", replyto = None, comment = "And I'm back! :D I know a lot of you were probably disappointed that I wasn't keeping up with the blog >.< But, you know, stuff was happening irl and I just kinda got lost in it all. Anywho! Hope you all enjoy my post! Be sure to comment! :D"),
-            dict(uid = 4, pid = 1, commenttime = "20160609T2105-0800", replyto = None, comment = "lol"),dict(uid = 4, pid = 2, commenttime = "20160609T2105-0800", replyto = None, comment = "lol"),dict(uid = 4, pid = 3, commenttime = "20160609T2105-0800", replyto = None, comment = "lol"),dict(uid = 4, pid = 4, commenttime = "20160609T2105-0800", replyto = None, comment = "lol"),dict(uid = 4, pid = 5, commenttime = "20160609T2105-0800", replyto = None, comment = "lol"),dict(uid = 4, pid = 6, commenttime = "20160609T2105-0800", replyto = None, comment = "lol"),
-            dict(uid = 1, pid = 6, commenttime = "20160610T0506+0000", replyto = 12, comment = "XD Glad you enjoyed it!"),dict(uid = 4, pid = 6, commenttime = "20160609T2106-0800", replyto = 13, comment = "lol"),dict(uid = 1, pid = 6, commenttime = "20160610T0506+0000", replyto = 14, comment = "???"),dict(uid = 4, pid = 6, commenttime = "20160609T2106-0800", replyto = 15, comment = "lol"),dict(uid = 1, pid = 6, commenttime = "20160610T0507+0000", replyto = 16, comment = "... I don't get it..."),dict(uid = 4, pid = 6, commenttime = "20160609T2107-0800", replyto = 17, comment = "lol"),
-            dict(uid = 3, pid = 3, commenttime = "20160610T1330+0600", replyto = 7, comment = "Wtf"),dict(uid = 4, pid = 3, commenttime = "20160609T2331-0800", replyto = 19, comment = "lol"),dict(uid = 3, pid = 3, commenttime = "20160610T1331+0600", replyto = 20, comment = "No 1 carse trollfag"),dict(uid = 4, pid = 3, commenttime = "20160609T2331-0800", replyto = 21, comment = "lol"),dict(uid = 3, pid = 3, commenttime = "20160610T1331+0600", replyto = 22, comment = "So @#$%in original @#$%wad"),dict(uid = 4, pid = 3, commenttime = "20160609T2331-0800", replyto = 23, comment = "lol"),dict(uid = 3, pid = 3, commenttime = "20160610T1332+0600", replyto = 24, comment = "Where are the !@$%ing mods!? Sum1 ban this troll ffs!!!!"),dict(uid = 4, pid = 3, commenttime = "20160609T2332-0800", replyto = 25, comment = "lol"),dict(uid = 3, pid = 3, commenttime = "20160610T1332+0600", replyto = 26, comment = "This forum iz 2 trash 5 me. L8r Fags."),dict(uid = 4, pid = 3, commenttime = "20160609T2332-0800", replyto = 27, comment = "lol"),
-            dict(uid = 1, pid = 7, commenttime = "20170101T0800+0000", replyto = None, comment = "Hey.\nI think I said most of the stuff I wanted to in the blog post. Like I said, I started this out hoping to talk to other people about stuff but...\nWell, I mean, I guess I was just a little bit over-optimistic. Recently it seems like nothing really goes as well as I hope.")
-            ]]
-    ]
-
-def setupadvancedtables(testcase):
-    """ Sets up a database Connection, Tables, and Rows in a "realistic" (heavy emphasis on the quotation marks) pattern for testing normal-use cases """
-    for _sql in [USERTABLESQL,SECURITYTABLESQL,TOKENTABLESQL,POSTSTABLESQL,COMMENTSTABLESQL]: testcase.connection.execute(_sql)
-    for table,rows in ADVANCEDROWS:
-        tab = testcase.connection.getadvancedtable(table)
-        setattr(testcase,table,tab)
-        tab.addmultiple(*rows, grouping = False)    
-
-TESTTABLESQL5 = """CREATE TABLE testtable5(checkvalue TEXT PRIMARY KEY CHECK (checkvalue IS NOT NULL), replacingvalue INTEGER UNIQUE ON CONFLICT REPLACE) WITHOUT ROWID;"""
-
-class FactoryTestObject():
-    def __init__(self,*args,**kwargs):
-        self.args = args
-        self.kwargs = kwargs
-
-class RandomRowFactory():
-    def __init__(self,cursor,row):
-        self.cursor = cursor
-        self.row = row
-
-class TestObject():
-    """ An object for testing AdvancedTable compatibility """
-    def __init__(self, name = None, value = None, forgnid = None, rowid = None):
-        self.name = name
-        self.value = value
-        self.forgnid = forgnid
-        self.rowid = rowid
-    def __eq__(self, other):
-        if isinstance(other,TestObject):
-            return all(getattr(self,k) == getattr(other,k) for k in ["name","value","forgnid","rowid"])
-
-############################################################################
-"""                              TEST CASES                              """
-############################################################################
-
 class DecoratorTest(unittest.TestCase):
     def setUp(self):
-        setupconnection(self)
+        utils.setupconnection(self)
         return super().setUp()
 
     def test_saverowfactory(self):
         """ Tests that saverowfactory reverts it to the original row_factory afterwards """
-        self.connection.row_factory = RandomRowFactory
+        self.connection.row_factory = utils.RandomRowFactory
         @objects.saverowfactory
         def testfunction(connection):
             return 
         testfunction(self.connection)
-        self.assertEqual(self.connection.row_factory,RandomRowFactory)
+        self.assertEqual(self.connection.row_factory,utils.RandomRowFactory)
 
     def test_saverowfactory_dict_factory(self):
         """ Tests that saverowfactory changes the row_factory to dict_factory """
-        self.connection.row_factory = RandomRowFactory
-        populatetesttable(self)
+        self.connection.row_factory = utils.RandomRowFactory
+        utils.populatetesttable(self)
         @objects.saverowfactory
         def testfunction(connection):
             return connection.execute("""SELECT * FROM testtable;""").fetchone()
@@ -146,18 +42,18 @@ class DecoratorTest(unittest.TestCase):
 
     def test_saverowfactory_bad(self):
         """ Tests that saverowfactory revers to the original row_factory even if the function fails """
-        self.connection.row_factory = RandomRowFactory
+        self.connection.row_factory = utils.RandomRowFactory
         @objects.saverowfactory
         def testfunction(connection):
             raise RuntimeError("Womp Womp")
         self.assertRaises(RuntimeError,testfunction,self.connection)
-        self.assertEqual(self.connection.row_factory, RandomRowFactory)
+        self.assertEqual(self.connection.row_factory, utils.RandomRowFactory)
 
 
 class RowFactoryTest(unittest.TestCase):
     def setUp(self):
-        setupconnection(self)
-        populatetesttable(self)
+        utils.setupconnection(self)
+        utils.populatetesttable(self)
         return super().setUp()
 
     def test_dict_factory(self):
@@ -174,7 +70,7 @@ class RowFactoryTest(unittest.TestCase):
 
     def test_object_to_factory_kwargs(self):
         """ Tests that object_to_factory can produce Objects via keywords """
-        self.connection.row_factory = objects.object_to_factory(FactoryTestObject)
+        self.connection.row_factory = objects.object_to_factory(utils.FactoryTestObject)
         results = self.connection.execute("""SELECT * FROM testtable;""").fetchall()
         ## Check the number of rows we get
         self.assertEqual(len(results),2)
@@ -183,14 +79,14 @@ class RowFactoryTest(unittest.TestCase):
                                    [dict(name="Hello",value=1),dict(name="World",value=2)]):
             with self.subTest(value = value,testvalue = testvalue):
                 ## Check that it's the correct object
-                self.assertIsInstance(value,FactoryTestObject)
+                self.assertIsInstance(value,utils.FactoryTestObject)
                 ## Check that object_to_factory used kwargs as expected
                 self.assertEqual(value.args,tuple())
                 self.assertEqual(value.kwargs,testvalue)
 
     def test_object_to_factory_args(self):
         """ Tests that object_to_factory can produce Objects via args """
-        self.connection.row_factory = objects.object_to_factory(FactoryTestObject,mode='args')
+        self.connection.row_factory = objects.object_to_factory(utils.FactoryTestObject,mode='args')
         results = self.connection.execute("""SELECT * FROM testtable;""").fetchall()
         ## Check the number of rows we get
         self.assertEqual(len(results),2)
@@ -199,7 +95,7 @@ class RowFactoryTest(unittest.TestCase):
                                    [("Hello",1),("World",2)]):
             with self.subTest(value = value,testvalue = testvalue):
                 ## Check that it's the correct object
-                self.assertIsInstance(value,FactoryTestObject)
+                self.assertIsInstance(value,utils.FactoryTestObject)
                 ## Check that object_to_factory used kwargs as expected
                 self.assertEqual(value.args,testvalue)
                 self.assertEqual(value.kwargs,dict())
@@ -287,7 +183,7 @@ class ConstraintCase(unittest.TestCase):
     """ Tests for various Constraint Objects """
     def test_uniquetableconstraint(self):
         """ Various tests for UniqueTableConstraints TODO """
-        setupconnection(self)
+        utils.setupconnection(self)
         self.connection.execute("""
 CREATE TABLE uniquetest (
 a,b,c,
@@ -308,7 +204,7 @@ UNIQUE (a,b,c)
 
 class HelperFunctionCase(unittest.TestCase):
     def setUp(self):
-        setupconnection(self)
+        utils.setupconnection(self)
         return super().setUp()
 
     def test_tableexists(self):
@@ -329,18 +225,31 @@ class HelperFunctionCase(unittest.TestCase):
 
 class DatabaseObjectCase(unittest.TestCase):
     def setUp(self):
-        setupconnection(self)
+        utils.setupconnection(self)
         return super().setUp()
 
     def test_gettable(self):
         """ Tests the gettable method of the Database Object. """
         testtable = self.connection.gettable("testtable")
-        self.assertEqual(testtable.definition,TESTTABLESQL)
-        self.assertEqual(testtable,Table.Table(TESTTABLESQL))
+        self.assertEqual(testtable.definition,utils.TESTTABLESQL)
+        self.assertEqual(testtable,Table.Table(utils.TESTTABLESQL))
+
+    def test_gettablebyid(self):
+        """ Tests that tables can be gotten by id """
+        utils.setupadditionaltables(self)
+        with Utilities.temp_row_factory(self.connection,sql.dict_factory):
+            tableresults = self.connection.execute("""SELECT rowid,tbl_name FROM sqlite_master WHERE type='table';""").fetchall()
+        ## Ensure gettablebyid also sets row_factory
+        self.connection.row_factory = objects.advancedrow_factory
+        for table in tableresults:
+            with self.subTest(table = table):
+                result = self.connection.gettablebyid(table['rowid'])
+                self.assertEqual(result.name, table['tbl_name'])
+                self.assertFalse(result.row_factory is None)
 
     def test_validatetable(self):
         """ Tests that validatetable method succeeds on valid input """
-        self.assertTrue(self.connection.validatetable(gettesttableconstructor()))
+        self.assertTrue(self.connection.validatetable(utils.gettesttableconstructor()))
 
     def test_validatetable_sameobj(self):
         """ Tests that validatetable method succeeds when given a Table generated by the database """
@@ -358,7 +267,7 @@ class DatabaseObjectCase(unittest.TestCase):
 
     def test_addtables_one(self):
         """ Tests that a single table can be successfully added using Database.addtables """
-        testtable = Table.Table(TESTTABLESQL2)
+        testtable = Table.Table(utils.TESTTABLESQL2)
         success,fail = self.connection.addtables(testtable)
         ## Make sure method output is correct
         self.assertListEqual(success,[testtable,])
@@ -368,8 +277,8 @@ class DatabaseObjectCase(unittest.TestCase):
 
     def test_addtables_multiple(self):
         """ Tests adding multiple tables successfully via .addtables """
-        testtable2 = Table.Table(TESTTABLESQL2)
-        testtable3 = Table.Table(TESTTABLESQL3)
+        testtable2 = Table.Table(utils.TESTTABLESQL2)
+        testtable3 = Table.Table(utils.TESTTABLESQL3)
         testtables = [testtable2,testtable3]
         success,fail = self.connection.addtables(*testtables)
         ## Ensure tables were sccessfully added
@@ -439,18 +348,18 @@ class DatabaseObjectCase(unittest.TestCase):
         self.assertEqual(c.list_constructs(),[])
 
         ## One Table
-        c.addtables(Table.Table(TESTTABLESQL))
-        self.assertEqual(c.list_constructs(),[TESTTABLESQL,])
+        c.addtables(Table.Table(utils.TESTTABLESQL))
+        self.assertEqual(c.list_constructs(),[utils.TESTTABLESQL,])
 
         ## Multiple Tables
-        setupadditionaltables(self)
-        ## setupadditionaltables sets self.testtables as a list of all presumed tables (testtable1 + tables added by setupadditionaltables)
+        utils.setupadditionaltables(self)
+        ## utils.setupadditionaltables sets self.testtables as a list of all presumed tables (testtable1 + tables added by utils.setupadditionaltables)
         ## sqlite_master doesn't save the ending ";" or "IF NOT EXISTS" clause
         self.assertEqual(c.list_constructs(), [table.definition.rstrip(";").replace("IF NOT EXISTS ","") for table in self.testtables])
 
         ## Remove a table
         c.removetable("testtable2")
-        self.testtables.remove(Table.Table(TESTTABLESQL2))
+        self.testtables.remove(Table.Table(utils.TESTTABLESQL2))
         self.assertEqual(c.list_constructs(), [table.definition.rstrip(";").replace("IF NOT EXISTS ","") for table in self.testtables])
 
         ## Add View
@@ -462,8 +371,8 @@ class DatabaseObjectCase(unittest.TestCase):
 class DatabaseObjectCase2(unittest.TestCase):
     """ Tests with additional table setup """
     def setUp(self):
-        setupconnection(self)
-        setupadditionaltables(self)
+        utils.setupconnection(self)
+        utils.setupadditionaltables(self)
         return super().setUp()
 
     def test_getalltables_returntype(self):
@@ -474,7 +383,7 @@ class DatabaseObjectCase2(unittest.TestCase):
 
     def test_addtables_exists(self):
         """ Tests that adding a table that already exists but has the "IF NOT EXISTS" tag succeeds """
-        testtable4 = Table.Table(TESTTABLESQL4)
+        testtable4 = Table.Table(utils.TESTTABLESQL4)
         testtables = [testtable4,]
         success,fail = self.connection.addtables(*testtables)
         ## Ensure tables were sccessfully added
@@ -489,7 +398,7 @@ class DatabaseObjectCase2(unittest.TestCase):
 
     def test_addtables_exists_bad(self):
         """ Tests that adding a table that already exists and does not have the "IF NOT EXISTS" tag fails """
-        testtable3 = Table.Table(TESTTABLESQL3)
+        testtable3 = Table.Table(utils.TESTTABLESQL3)
         testtables = [testtable3,]
         success,fail = self.connection.addtables(*testtables)
         ## Ensure tables were sccessfully added
@@ -505,7 +414,7 @@ class DatabaseObjectCase2(unittest.TestCase):
 
     def test_addandvalidatetables_addone(self):
         """ Tests that addandvalidatetables will correctly add and validate a table not in the database """
-        testtable5 = Table.Table(TESTTABLESQL5)
+        testtable5 = Table.Table(utils.TESTTABLESQL5)
         success,fail = self.connection.addandvalidatetables(testtable5,*self.testtables)
         ## Should only succeed
         self.assertListEqual(success,[testtable5,]+self.testtables)
@@ -526,7 +435,7 @@ class DatabaseObjectCase2(unittest.TestCase):
     def test_addandvalidatetables_mixed(self):
         """ Tests that addandvalidatetables will result in a failure when a table's definition is different from its version in the database, and success for tables that are added or are properly implemented """
         badtesttable = Table.TableConstructor("testtable",columns = dict(name="TEXT",value="FLOAT"))
-        goodtesttable = Table.Table(TESTTABLESQL5)
+        goodtesttable = Table.Table(utils.TESTTABLESQL5)
         testtables = self.testtables+[badtesttable,goodtesttable]
         success,fail = self.connection.addandvalidatetables(*testtables)
         ## Preexisting and good testtable should be in success
@@ -536,8 +445,8 @@ class DatabaseObjectCase2(unittest.TestCase):
 
 class TableConstructorCase(unittest.TestCase):
     def setUp(self):
-        setupconnection(self)
-        self.tablecon = gettesttableconstructor()
+        utils.setupconnection(self)
+        self.tablecon = utils.gettesttableconstructor()
         return super().setUp()
 
     def test_tableconstructor(self):
@@ -578,7 +487,7 @@ class TableConstructorCase(unittest.TestCase):
 
 class TableObjectCase(unittest.TestCase):
     def setUp(self):
-        setupconnection(self)
+        utils.setupconnection(self)
         return super().setUp()
 
     def test_table_rowid(self):
@@ -588,13 +497,13 @@ class TableObjectCase(unittest.TestCase):
 
     def test_table_rowid_specified(self):
         """ Tests that a Table that specifies it's Integer Primary Key returns the correct one. """
-        setupadditionaltables(self)
+        utils.setupadditionaltables(self)
         testtable = self.connection.gettable("testtable3")
         self.assertEqual(testtable.rowid,"myid")
 
     def test_table_rowid_withoutrowid(self):
         """ Tests that a Table that specifies no Integer Primary Key and "WITHOUT ROWID" returns None for it's rowid. """
-        table = Table.Table(TESTTABLESQL5)
+        table = Table.Table(utils.TESTTABLESQL5)
         self.connection.addtables(table)
         testtable = self.connection.gettable("testtable5")
         self.assertIsNone(testtable.rowid)
@@ -647,12 +556,12 @@ CHECK (name IS NOT NULL)
 
 class AdvancedTableCase(unittest.TestCase):
     def setUp(self):
-        setupconnection(self)
+        utils.setupconnection(self)
         return super().setUp()
 
     def test_advancedtablefactory(self):
         """ Tests that advancedtablefactory reverts the Table's Datbase to the original row_factory afterwards """
-        self.connection.row_factory = RandomRowFactory
+        self.connection.row_factory = utils.RandomRowFactory
         testtable = self.connection.gettable("testtable")
         testtable.row_factory = objects.dict_factory
         @objects.advancedtablefactory
@@ -660,14 +569,14 @@ class AdvancedTableCase(unittest.TestCase):
             return 
         testfunction(testtable)
         ## Make sure database was reverted
-        self.assertEqual(self.connection.row_factory,RandomRowFactory)
+        self.assertEqual(self.connection.row_factory,utils.RandomRowFactory)
         ## Double check that nothing weird happened with our testtable
         self.assertEqual(testtable.row_factory,objects.dict_factory)
 
     def test_advancedtablefactory_dict_factory(self):
         """ Tests that advancedtablefactory changes the row_factory to dict_factory """
-        self.connection.row_factory = RandomRowFactory
-        populatetesttable(self)
+        self.connection.row_factory = utils.RandomRowFactory
+        utils.populatetesttable(self)
         testtable = self.connection.gettable("testtable")
         testtable.row_factory = objects.dict_factory
         @objects.advancedtablefactory
@@ -680,7 +589,7 @@ class AdvancedTableCase(unittest.TestCase):
 
     def test_advancedtablefactory_bad(self):
         """ Tests that advancedtablefactory revers to the original row_factory even if the function fails """
-        self.connection.row_factory = RandomRowFactory
+        self.connection.row_factory = utils.RandomRowFactory
         testtable = self.connection.gettable("testtable")
         testtable.row_factory = objects.dict_factory
 
@@ -691,17 +600,17 @@ class AdvancedTableCase(unittest.TestCase):
         ## Make sure it's actually raising an error
         self.assertRaises(RuntimeError,testfunction,testtable)
         ## Check connection's row_factory
-        self.assertEqual(self.connection.row_factory, RandomRowFactory)
+        self.assertEqual(self.connection.row_factory,utils.RandomRowFactory)
         ## And triple check our table's factory
         self.assertEqual(testtable.row_factory,objects.dict_factory)
 
     def test_initialize(self):
         """ Tests that AdvancedTable can be properly initialized """
-        testtable = Table.AdvancedTable(TESTTABLESQL,self.connection)
+        testtable = Table.AdvancedTable(utils.TESTTABLESQL,self.connection)
         ## Make sure it's actually an AdvancedTable
         self.assertIsInstance(testtable,Table.AdvancedTable)
         ## Make sure it's attributes are correct
-        self.assertEqual(testtable._definition,TESTTABLESQL)
+        self.assertEqual(testtable._definition,utils.TESTTABLESQL)
         self.assertEqual(testtable.database,self.connection)
         ## Should be Equal (at the moment) to a normal Table
         self.assertEqual(testtable,self.connection.gettable("testtable"))
@@ -728,7 +637,7 @@ class AdvancedTableCase(unittest.TestCase):
         ## Make sure it's actually an AdvancedTable
         self.assertIsInstance(testtable,Table.AdvancedTable)
         ## Make sure it's attributes are correct
-        self.assertEqual(testtable._definition,TESTTABLESQL)
+        self.assertEqual(testtable._definition,utils.TESTTABLESQL)
         self.assertEqual(testtable.database,self.connection)
         ## Should be Equal (at the moment) to a normal Table
         self.assertEqual(testtable,self.connection.gettable("testtable"))
@@ -771,7 +680,7 @@ class AdvancedTableCase(unittest.TestCase):
     def test_select(self):
         """ Tests that select alone returns all the rows in testtable """
         ## Add rows to testtable
-        populatetesttable(self)
+        utils.populatetesttable(self)
         testtable = self.connection.getadvancedtable("testtable")
         rows = testtable.select()
         self.assertListEqual(rows,[("Hello",1),("World",2)])
@@ -779,13 +688,13 @@ class AdvancedTableCase(unittest.TestCase):
     def test_select_rowid(self):
         """ Tests that select with rowid returns all the rows in testtable with their rowids """
         ## Add rows to testtable
-        populatetesttable(self)
+        utils.populatetesttable(self)
         testtable = self.connection.getadvancedtable("testtable")
         rows = testtable.select(rowid = True)
         self.assertListEqual(rows,[(1,"Hello",1),(2,"World",2)])
         ## Test with a specified rowid
-        setupadditionaltables(self)
-        populatetesttable3(self)
+        utils.setupadditionaltables(self)
+        utils.populatetesttable3(self)
         testtable3 = self.connection.getadvancedtable("testtable3")
         rows = testtable3.select(rowid = True)
         self.assertListEqual(rows,[(1,True),(2,False),(3,False),(4,True)])
@@ -793,31 +702,31 @@ class AdvancedTableCase(unittest.TestCase):
     def test_select_factory(self):
         """ Tests that select will use the Table's Row Factory instead of the Database's. """
         ## Add rows to testtable
-        populatetesttable(self)
+        utils.populatetesttable(self)
         testtable = self.connection.getadvancedtable("testtable")
         ## Set Different factories
         testtable.database.row_factory = objects.dict_factory
-        testtable.row_factory = objects.object_to_factory(TestObject)
+        testtable.row_factory = objects.object_to_factory(utils.TestObject)
 
         rows = testtable.select()
         ## Check Type
         expectations = [dict(name="Hello",value=1),dict(name="World",value = 2)]
         for row,expected in zip(rows,expectations):
             with self.subTest(row = row):
-                self.assertIsInstance(row,TestObject)
+                self.assertIsInstance(row,utils.TestObject)
                 self.assertEqual(row.name,expected['name'])
                 self.assertEqual(row.value,expected['value'])
 
     def test_select_replacements_dict(self):
         """ Tests that select correctly substitues replacements as dictionary """
-        populatetesttable(self)
+        utils.populatetesttable(self)
         testtable = self.connection.getadvancedtable("testtable")
         rows = testtable.select(query = "value < :rep", replacements = dict(rep = 2))
         self.assertListEqual(rows,[("Hello",1),])
 
     def test_select_replacements_list(self):
         """ Tests that select correctly substitues replacements as list """
-        populatetesttable(self)
+        utils.populatetesttable(self)
         testtable = self.connection.getadvancedtable("testtable")
         rows = testtable.select(query = "value < ?", replacements =(2,))
         self.assertListEqual(rows,[("Hello",1),])
@@ -832,17 +741,17 @@ class AdvancedTableCase(unittest.TestCase):
         self.assertRaises(ValueError,testtable.select,query = "value = ?", replacements = True)
         self.assertRaises(ValueError,testtable.select,query = "value = ?", replacements = set())
         self.assertRaises(ValueError,testtable.select,query = "value = ?", replacements = (x for x in range(10)))
-        self.assertRaises(ValueError,testtable.select,query = "value = ?", replacements = TestObject)
-        self.assertRaises(ValueError,testtable.select,query = "value = ?", replacements = TestObject())
+        self.assertRaises(ValueError,testtable.select,query = "value = ?", replacements = utils.TestObject)
+        self.assertRaises(ValueError,testtable.select,query = "value = ?", replacements = utils.TestObject())
         self.assertRaises(ValueError,testtable.select,query = "value = ?", replacements = lambda: None)
-        self.assertRaises(ValueError,testtable.select,query = "value = ?", replacements = populatetesttable)
+        self.assertRaises(ValueError,testtable.select,query = "value = ?", replacements = utils.populatetesttable)
 
     def test_select_columns(self):
         """ Tests that the default columns setting on select functions selects all columns """
         ## Setup more tables to test
-        setupadditionaltables(self)
+        utils.setupadditionaltables(self)
         ## Add some values to test with
-        populatealltables(self)
+        utils.populatealltables(self)
         ## Switch over to dict_factory so we can see columnnames
         self.connection.row_factory = objects.dict_factory
         
@@ -875,7 +784,7 @@ class AdvancedTableCase(unittest.TestCase):
 
     def test_select_various(self):
         """ Tests a couple of basic select queries """
-        populatetesttable(self)
+        utils.populatetesttable(self)
         testtable = self.connection.getadvancedtable("testtable")
         ## Blank query should be the same as No Query
         rows = testtable.select(query = "")
@@ -889,8 +798,8 @@ class AdvancedTableCase(unittest.TestCase):
 
     def test_selectall(self):
         """ Tests that AdvancedTable's selectall functions identically to select() """
-        setupadditionaltables(self)
-        populatealltables(self)
+        utils.setupadditionaltables(self)
+        utils.populatealltables(self)
         testtable = self.connection.getadvancedtable("testtable")
         testtable2 = self.connection.getadvancedtable("testtable2")
         testtable3 = self.connection.getadvancedtable("testtable3")
@@ -907,7 +816,7 @@ class AdvancedTableCase(unittest.TestCase):
 
     def test_quickselect(self):
         """ Tests the functionality of quickselect (since quickselect uses select, which is already tested, not as much testing needs to be done) """
-        populatetesttable(self)
+        utils.populatetesttable(self)
         testtable = self.connection.getadvancedtable("testtable")
         for kwarg,expected in [
             ({"value":1}, [("Hello",1),]),
@@ -937,8 +846,8 @@ class AdvancedTableCase(unittest.TestCase):
         self.connection.row_factory = objects.dict_factory
 
         ## Some additional setup
-        populatetesttable(self)
-        setupadditionaltables(self)
+        utils.populatetesttable(self)
+        utils.setupadditionaltables(self)
         testtable2 = self.connection.getadvancedtable("testtable2")
         inrows = [{"forgnid":0,"myname":None},{"forgnid":0,"myname":"Foo"},{"forgnid":1,"myname":None},{"forgnid":1,"myname":"Bar"},{"forgnid":1,"myname":"BizzBuzz"}]
 
@@ -964,9 +873,9 @@ class AdvancedTableCase(unittest.TestCase):
     def test_parseobject(self):
         """ Tests that the AdvancedTable can parse the correct attributes from an object that shares it's columns """
         ## Throw in some rows to turn into objects
-        populatetesttable(self)
+        utils.populatetesttable(self)
         testtable = self.connection.getadvancedtable("testtable")
-        testtable.row_factory = objects.object_to_factory(TestObject)
+        testtable.row_factory = objects.object_to_factory(utils.TestObject)
         rows = testtable.quickselect(name = "Hello")
         result = [testtable.parseobject(row) for row in rows]
         self.assertListEqual(result,[{"name":"Hello","value":1}])
@@ -1010,7 +919,7 @@ class AdvancedTableCase(unittest.TestCase):
     def test_queryparser_advancedrow(self):
         """ Tests that when the query parser receives an AdvancedRow, it uses the AdvanceRow's Table's PK """
         self.connection.row_factory = objects.advancedrow_factory
-        setupadvancedtables(self)
+        utils.setupadvancedtables(self)
 
         ## Single level
         table = self.connection.getadvancedtable("users")
@@ -1046,13 +955,13 @@ class AdvancedTableCase(unittest.TestCase):
     def test_addrow_bad_objectandkwargs(self):
         """ Tests that it is an error to specify both an object to add and kwargs for addrow """
         testtable = self.connection.getadvancedtable("testtable")
-        obj = TestObject(name="Hello",value=1)
+        obj = utils.TestObject(name="Hello",value=1)
         self.assertRaises(ValueError,testtable.addrow, object = obj, name = "Hello", value = 1)
         
     def test_addrow_object(self):
         """ Tests that an object can be passed which will be parsed by parseobject """
         testtable = self.connection.getadvancedtable("testtable")
-        obj = TestObject(name="Hello",value=1)
+        obj = utils.TestObject(name="Hello",value=1)
         ## Add object
         rowid = testtable.addrow(object = obj)
         rows = testtable.quickselect(rowid=True, pk = rowid)
@@ -1092,7 +1001,7 @@ class AdvancedTableCase(unittest.TestCase):
         """ Tests that addmultiple can process multiple objects """
         testtable = self.connection.getadvancedtable("testtable")
         ## The more values used, the less likely that random happenstance would result in the correct row/rowid pairing
-        input = [TestObject(name="Foo",value=1),TestObject(name="Bar",value=2),TestObject(name="Bizz",value=3),TestObject(name="Bazz",value = 4)]
+        input = [utils.TestObject(name="Foo",value=1),utils.TestObject(name="Bar",value=2),utils.TestObject(name="Bizz",value=3),utils.TestObject(name="Bazz",value = 4)]
         rowids = testtable.addmultiple(*input)
         
         ## Check that we got the correct number of rowids back
@@ -1100,14 +1009,14 @@ class AdvancedTableCase(unittest.TestCase):
         ## Check that the rowids are what we would expect
         self.assertListEqual(rowids,[1,2,3,4])
         ## Get objects back out to ensure they went in correctly
-        testtable.row_factory = objects.object_to_factory(TestObject)
+        testtable.row_factory = objects.object_to_factory(utils.TestObject)
         self.assertListEqual(testtable.selectall(),input)
 
     def test_addmultiple_mixed(self):
         """ Tests that addmultiple can process multiple dicts and objects mixed together"""
         testtable = self.connection.getadvancedtable("testtable")
         ## The more values used, the less likely that random happenstance would result in the correct row/rowid pairing
-        input = [TestObject(name="Foo",value=1),dict(name="Bar",value=2),dict(name="Bizz",value=3),TestObject(name="Bazz",value = 4)]
+        input = [utils.TestObject(name="Foo",value=1),dict(name="Bar",value=2),dict(name="Bizz",value=3),utils.TestObject(name="Bazz",value = 4)]
         rowids = testtable.addmultiple(*input)
         
         ## Check that we got the correct number of rowids back
@@ -1115,14 +1024,14 @@ class AdvancedTableCase(unittest.TestCase):
         ## Check that the rowids are what we would expect
         self.assertListEqual(rowids,[1,2,3,4])
         ## We're going to convert them all to objects for comparison
-        testtable.row_factory = objects.object_to_factory(TestObject)
+        testtable.row_factory = objects.object_to_factory(utils.TestObject)
         ## We're also comparing rowid, since that isn't tested in this manner elsewhere
-        self.assertListEqual(testtable.selectall(rowid = True),[TestObject(name="Foo",value=1,rowid = 1),TestObject(name="Bar",value=2,rowid = 2),
-                                                    TestObject(name="Bizz",value=3, rowid = 3),TestObject(name="Bazz",value = 4, rowid = 4)]) 
+        self.assertListEqual(testtable.selectall(rowid = True),[utils.TestObject(name="Foo",value=1,rowid = 1),utils.TestObject(name="Bar",value=2,rowid = 2),
+                                                    utils.TestObject(name="Bizz",value=3, rowid = 3),utils.TestObject(name="Bazz",value = 4, rowid = 4)]) 
 
     def test_addmultiple_difflengths(self):
         """ Tests that addmultiple properly groups and handles inserts of different lengths"""
-        setupadditionaltables(self)
+        utils.setupadditionaltables(self)
         ## Using testtable4 because it has the most columns
         testtable4 = self.connection.getadvancedtable("testtable4")
         ## testtable4 columns: defaultvalue TEXT default "Hello World", uniquevalue BLOB UNIQUE, checkevenvalue INT CHECK(checkevenvalue % 2 = 0)
@@ -1151,7 +1060,8 @@ class AdvancedTableCase(unittest.TestCase):
     def test_addmultiple_argslimit(self):
         """ Tests that inserts are split into batches when the ReplacementDict is larger than the REPLACEMENT_LIMIT (900) """
         ## 10 Columns, so we can surpass the RELACEMENT_LIMIT with 91 Inserts
-        self.connection.row_factory = objects.advancedrow_factory
+        #self.connection.row_factory = objects.advancedrow_factory
+        self.connection.row_factory = objects.dict_factory
         table = Table.Table("""CREATE TABLE massive (
         a, b, c, d, e, f, g, h, i, j
         );""")
@@ -1164,6 +1074,10 @@ class AdvancedTableCase(unittest.TestCase):
         table.addmultiple(*inserts)
         ## In theory, if this wasn't working it would have raised an OperationalError, but we'll fetch the rows
         rows = table.selectall()
+        #def mapid(rowtup):
+        #    """ AdvancedRows automatically have 
+        #    rowtup[1]['rowid'] = rowtup[0]
+        #map(mapid,inserts)
         self.assertEqual(inserts,rows)
 
     def test_quickupdate(self):
@@ -1171,44 +1085,44 @@ class AdvancedTableCase(unittest.TestCase):
         testtable = self.connection.getadvancedtable("testtable")
         
         ## Test Nothing
-        populatetesttable(self)
+        utils.populatetesttable(self)
         testtable.quickupdate()
         ## All rows should be unchanged
         self.assertListEqual(testtable.selectall(),[("Hello",1),("World",2)])
 
         ## Test no constraints
-        populatetesttable(self)
+        utils.populatetesttable(self)
         testtable.quickupdate(name = "Foobar")
         ## All rows should have name = "Foobar"
         self.assertListEqual(testtable.selectall(),[("Foobar",1),("Foobar",2)])
 
         ## Test one constraint
-        populatetesttable(self)
+        utils.populatetesttable(self)
         testtable.quickupdate(constraints = dict(value__lt=2), name="Bizzbazz")
         ## rowid=1/(Hello,1) should have name = "Bizzbazz" instead
         self.assertListEqual(testtable.selectall(rowid=True),[(1,"Bizzbazz",1),(2,"World",2)])
 
         ## Test Multiple Constraints
-        populatetesttable(self)
+        utils.populatetesttable(self)
         testtable.quickupdate(constraints = dict(value__gte=2,name__likeany="orl"), name="BizzBar")
         ## rowid=2/(World,2) should have name = "BizzBar" instead
         self.assertListEqual(testtable.selectall(rowid=True),[(1,"Hello",1),(2,"BizzBar",2)])
 
         ## Test Multiple Sets
-        populatetesttable(self)
+        utils.populatetesttable(self)
         testtable.quickupdate(constraints = dict(value__lte=2), name="Bang", value = 3)
         ## Both rows should be updated to be identical (outside of rowid)
         self.assertListEqual(testtable.selectall(rowid=True),[(1,"Bang",3),(2,"Bang",3)])
 
         ## Test Mutliple Constraints with no result selected
-        populatetesttable(self)
+        utils.populatetesttable(self)
         testtable.quickupdate(constraints = dict(value__gte=0, name__like="Foobar"), name="Can't Touch This!")
         ## Both rows should be untouched
         self.assertListEqual(testtable.selectall(),[("Hello",1),("World",2)])
 
     def test_quickupdate_bad(self):
         """ Tests some error-raising for quickupdate """
-        populatetesttable(self)
+        utils.populatetesttable(self)
         testtable = self.connection.getadvancedtable("testtable")
         self.assertRaises(ValueError,testtable.quickupdate, constriants = "Hello")
         self.assertRaises(ValueError, testtable.quickupdate, constraints = dict(notacolumn=True))
@@ -1218,7 +1132,7 @@ class AdvancedTableCase(unittest.TestCase):
 
     def test_deleteall(self):
         """ Tests that deleteall removes all rows """
-        populatetesttable(self)
+        utils.populatetesttable(self)
         testtable = self.connection.getadvancedtable("testtable")
         ## Checking that rows are actually in there
         self.assertTrue(testtable.selectall())
@@ -1230,39 +1144,39 @@ class AdvancedTableCase(unittest.TestCase):
         """ Tests the AdvancedTable's quickdelete method. Like testing quickupdate, this builds off of pretested functions, so it won't be as delineated. """
         testtable = self.connection.getadvancedtable("testtable")
         ## Test one constraint
-        populatetesttable(self)
+        utils.populatetesttable(self)
         testtable.quickdelete(value__lt=2)
         ## rowid=1/(Hello,1) should be deleted
         self.assertListEqual(testtable.selectall(rowid=True),[(2,"World",2),])
 
         ## Test Multiple Constraints
-        populatetesttable(self)
+        utils.populatetesttable(self)
         testtable.quickdelete(value__gte=2,name__likeany="orl")
         ## rowid=2/(World,2) should be deleted
         self.assertListEqual(testtable.selectall(rowid=True),[(1,"Hello",1),])
 
         ## Test Multiple Deletes
-        populatetesttable(self)
+        utils.populatetesttable(self)
         testtable.quickdelete(value__lte=2)
         ## Both rows should be deleted
         self.assertListEqual(testtable.selectall(rowid=True),[])
 
         ## Test No selects
-        populatetesttable(self)
+        utils.populatetesttable(self)
         testtable.quickdelete(name="Can't Touch This!")
         ## Both rows should be untouched
         self.assertListEqual(testtable.selectall(),[("Hello",1),("World",2)])
 
     def test_quickdelete_2(self):
         """ Some more quick delete tests """
-        populatetesttable(self)
+        utils.populatetesttable(self)
         testtable = self.connection.getadvancedtable("testtable")
         testtable.quickdelete(pk__in = [1,2])
         self.assertListEqual(testtable.selectall(),[])
 
     def test_quickdelete_bad(self):
         """ Tests some error-raising for quickdelete """
-        populatetesttable(self)
+        utils.populatetesttable(self)
         testtable = self.connection.getadvancedtable("testtable")
         ## Non-existent column
         self.assertRaises(ValueError, testtable.quickdelete, notacolumn=True)
@@ -1292,14 +1206,14 @@ class AdvancedTableCase(unittest.TestCase):
 
     def test_get_or_addrow_basic(self):
         """ Basic test for get_or_addrow """
-        setupadvancedtables(self)
+        utils.setupadvancedtables(self)
         self.connection.row_factory = objects.dict_factory
         table = self.connection.getadvancedtable("users")
 
         ## Make sure there's a user to get for the test and that it is exactly as expected
         ## AdvancedRows is formatted [ [tablename, [...rows...], ...]
         ## So, first (tablename,rows), and then second item (rows), and first row
-        testuser = dict(ADVANCEDROWS[0][1][0])
+        testuser = dict(utils.ADVANCEDROWS[0][1][0])
         testuserrow = table.quickselect(**testuser)
         self.assertTrue(testuserrow)
         testuserrow = testuserrow.first()
@@ -1324,10 +1238,10 @@ class AdvancedTableCase(unittest.TestCase):
 
     def test_get_or_addrow_bad(self):
         """ Tests that get_or_addrow will raise a ValueError if passed a Non-Column argument """
-        setupadvancedtables(self)
+        utils.setupadvancedtables(self)
         table = self.connection.getadvancedtable("users")
         ## TODO: Currently quick simple test, should be Expanded
-        testuser = dict(ADVANCEDROWS[0][1][0])
+        testuser = dict(utils.ADVANCEDROWS[0][1][0])
         ## Testuser is valid data, and then foobar is additional data
         self.assertRaisesRegex(ValueError,"get_or_addrow recieved invalid columns",table.get_or_addrow,foobar=True, **testuser)
         ## Only with invalid cols
@@ -1335,10 +1249,10 @@ class AdvancedTableCase(unittest.TestCase):
 
     def test_get_or_addrow_missingcols_notnull(self):
         """ Tests that get_or_addrow raises and ValueError when a NotNull column is missing """
-        setupadvancedtables(self)
+        utils.setupadvancedtables(self)
         table = self.connection.getadvancedtable("notsecurity")
         ## Assumably testrow: dict(userid=1,salt=1234,hash="ABCDEF")
-        testrow = dict(ADVANCEDROWS[1][1][0])
+        testrow = dict(utils.ADVANCEDROWS[1][1][0])
         ## Sanity Check (that testrow is already in table)
         self.assertTrue(table.quickselect(**testrow))
         
@@ -1370,8 +1284,8 @@ class AdvancedTableCase(unittest.TestCase):
 
 class AdvancedRowCase(unittest.TestCase):
     def setUp(self):
-        setupconnection(self)
-        setupadvancedtables(self)
+        utils.setupconnection(self)
+        utils.setupadvancedtables(self)
         self.samplerow = dict(commentid = 1,uid = 1, pid = 1, commenttime = "20160101T0001+0000", replyto = None, comment = "Thanks for reading, Everyone! It's my New Year's Resolution to write a post a day! Look forward to it!")
         return super().setUp()
 
@@ -1493,9 +1407,9 @@ class AdvancedRowCase(unittest.TestCase):
 class QueryResultCase(unittest.TestCase):
     """ Tests for QueryResult Object and AdvancedTable functions that are decorated by its decorator """
     def setUp(self):
-        setupconnection(self)
-        setupadditionaltables(self)
-        populatealltables(self)
+        utils.setupconnection(self)
+        utils.setupadditionaltables(self)
+        utils.populatealltables(self)
         return super().setUp()
 
     def test_object_good(self):
@@ -1530,15 +1444,15 @@ class QueryResultCase(unittest.TestCase):
 
 class AdvancedSetupCase(unittest.TestCase):
     def setUp(self):
-        setupconnection(self)
-        setupadvancedtables(self)
+        utils.setupconnection(self)
+        utils.setupadvancedtables(self)
         self.maxDiff = None
         return super().setUp()
     def test_setup(self):
         """ Tests that advancedtables populated everything correctly """
         ## Set dict_factory for comparisons
         self.connection.row_factory = objects.dict_factory
-        for table, rows in ADVANCEDROWS:
+        for table, rows in utils.ADVANCEDROWS:
             tab = self.connection.getadvancedtable(table)
             ## Copy rows so we can update them without screwing everything up
             inrows = [dict(row) for row in rows]
@@ -1560,8 +1474,8 @@ class AdvancedSetupCase(unittest.TestCase):
 
 class JoinCase(unittest.TestCase):
     def setUp(self):
-        setupconnection(self)
-        setupadvancedtables(self)
+        utils.setupconnection(self)
+        utils.setupadvancedtables(self)
         return super().setUp()
 
     def test_twotable(self):
@@ -1574,7 +1488,7 @@ class UtilitiesCase(unittest.TestCase):
 
     def test_temp_row_factory(self):
         """ Tests the temp_row_factory Context Manager works as advertised """
-        setupconnection(self)
+        utils.setupconnection(self)
         row = self.connection.execute(" SELECT 1 AS myvalue;").fetchone()
         self.assertFalse(isinstance(row,dict))
         self.assertEqual(row[0],1)
@@ -1597,7 +1511,7 @@ ORDER BY name;"""
 def basicviewsetup(testcase):
     """ Creates a new database on testcase with 'testtable' table and 'testview' view"""
     testcase.connection = Connection.Database(file = ":memory:")
-    testcase.connection.execute(TESTTABLESQL)
+    testcase.connection.execute(utils.TESTTABLESQL)
     testcase.connection.execute(TESTVIEWSQL)
 
 def viewpopulatetesttable(testcase):

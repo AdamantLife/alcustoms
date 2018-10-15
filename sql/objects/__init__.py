@@ -11,7 +11,7 @@ from sqlite3 import Row
 import alcustoms.decorators as aldecors
 from alcustoms.methods import isiterable
 ## This Module
-from ..constants import *
+from alcustoms.sql.constants import *
 
 """ To enable parsing, set PARSER at the module-level (PARSER is set automatically to .NewParser.Parser """
 PARSER = None
@@ -43,7 +43,8 @@ def advancedtablefactory(func):
     """
     @functools.wraps(func)
     def inner(self,*args,**kw):
-        if self.row_factory is None: return func(self,*args,**kw)
+        if self.row_factory is None:
+            return func(self,*args,**kw)
         old = self.database.row_factory
         try:
             self.database.row_factory = self.row_factory
@@ -291,6 +292,8 @@ def _advancedparserquery(table, query,value,_replacer):
 
 class QueryResult(list):
     """ A List subclass with an extra helper functions for returning a single result """
+    def __add__(self,other):
+        return QueryResult(super().__add__(other))
     def first(self):
         if not self: return None
         return self[0]
@@ -365,34 +368,42 @@ class AdvancedRow():
         self.row = dict_factory(cursor,row)
 
     def __getattribute__(self, name):
+        ## Don't hijack reserved names or specific, known attrs (saves a couple steps)
+        if name.startswith("__") or name in ['table','cursor','row']:
+            #print(name,":",super().__getattribute__(name))
+            return super().__getattribute__(name)
+        ## Pk is alias for whatever the table's rowid is
         if name == "pk":
             name = str(self.table.pk)
         if name != "row" and name in self.row:
-            column = self.table.columns[name]
-            if column.isforeignkey:
-                ## NOTE: Multiple Reference Constraints per column is not supported
-                constraint = [constraint for constraint in column.allconstraints if isinstance(constraint,ReferenceConstraint)][0]
-                ftable = constraint.foreigntable
-                fcolumn = constraint.foreigncolumns
-                if isinstance(constraint,ColumnReferenceConstraint):
-                    fcolumn = fcolumn[0]
-                elif isinstance(constraint,TableReferenceConstraint):
-                    ## Foreign Key (*columns) References {ftable}(*fcolumns)
-                    ## => *columns should be index-paired
-                    index = constraint.columns.index(column)
-                    fcolumn = fcolumn[index]
+            ## rowid is not (currently) automatically generated for Table Objects
+            ## (which irrelevant anyway because the following code-block only cares about foreignkeys)
+            if name in self.table.columns:
+                column = self.table.columns[name]
+                if column.isforeignkey:
+                    ## NOTE: Multiple Reference Constraints per column is not supported
+                    constraint = [constraint for constraint in column.allconstraints if isinstance(constraint,ReferenceConstraint)][0]
+                    ftable = constraint.foreigntable
+                    fcolumn = constraint.foreigncolumns
+                    if isinstance(constraint,ColumnReferenceConstraint):
+                        fcolumn = fcolumn[0]
+                    elif isinstance(constraint,TableReferenceConstraint):
+                        ## Foreign Key (*columns) References {ftable}(*fcolumns)
+                        ## => *columns should be index-paired
+                        index = constraint.columns.index(column)
+                        fcolumn = fcolumn[index]
 
-                conn = self.table.database
-                ftable = conn.getadvancedtable(ftable)
+                    conn = self.table.database
+                    ftable = conn.getadvancedtable(ftable)
 
-                ## Return Row with Corresponding Foreign Key's Value
-                try:
-                    result = ftable.quickselect(**{f"{fcolumn}__eq":self.row[name]})
-                except Exception as e:
-                    print(fcolumn, ftable)
-                    raise e
-                if result: return result[0]
-                return None
+                    ## Return Row with Corresponding Foreign Key's Value
+                    try:
+                        result = ftable.quickselect(**{f"{fcolumn}__eq":self.row[name]})
+                    except Exception as e:
+                        #print(fcolumn, ftable)
+                        raise e
+                    if result: return result[0]
+                    return None
             return self.row[name]
         return super().__getattribute__(name)
 
@@ -402,11 +413,43 @@ class AdvancedRow():
         if isinstance(other,dict):
             return self.row == other
 
-def advancedrow_factory(cursor,row):
-    if isinstance(cursor,(Table.AdvancedTable,)):
-        return lambda c,r, table = cursor: AdvancedRow(table,c,r)
-    warnings.warn("advancedrow_factory is meant for alcustoms.sql Database and AdvancedTable instances and should not be implemented directly as a row_factory on other objects")
-    return row
+class AdvancedRow_Factory():
+    """ A class which creates cursor factories for use with sql exection. """
+    def __init__(self,_class = AdvancedRow, parent = None):
+        """ Creates a new row_factory.
+
+            _class is the target of AdvancedRow_Factory()(cursor,row) and should
+            return the row in the desired format. The default for _class is
+            AdvancedRow.
+            To use this instance, parent must be set: parent should be
+            an AdvancedTable (or subclass of AdvancedTable).
+            When this instanced is called by a Connection object (subsequent of
+            sql execution), it will pass it's parent to the target class, along
+            with the cursor and the row (parent, cursor, and row are passed as
+            positional arguments).
+        """
+        self._class = _class
+        self._parent = None
+        self.parent = parent
+    @property
+    def parent(self):
+        return self._parent
+    @parent.setter
+    def parent(self,value):
+        if value is None:
+            self._parent = None
+            return
+        if not isinstance(value,Table.AdvancedTable):
+            raise ValueError("parent should be an AdvancedTable or subclass")
+        self._parent = value
+    def new(self,parent = None):
+        return self.__class__(_class = self._class, parent = parent)
+    def __call__(self,cursor,row):
+        if not self.parent or not self._class:
+            raise AttributeError("AdvancedRow Factory's parent or class is not set")
+        return self._class(self.parent,cursor,row)
+
+advancedrow_factory = AdvancedRow_Factory()
 
 #########################################################################
 """                         DATABASE FUNCTIONS                        """

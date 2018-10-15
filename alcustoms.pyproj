@@ -19,7 +19,10 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include=".gitattributes" />
+    <Content Include=".gitignore" />
     <Content Include="big.txt" />
+    <Content Include="LICENSE" />
     <Content Include="Programs\README.md" />
     <Content Include="sql\objects\__pycache__\Connection.cpython-36.pyc" />
     <Content Include="sql\objects\__pycache__\Table.cpython-36.pyc" />
@@ -50,6 +53,7 @@
     <Content Include="tkinter\to convert\stats2.png" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="albox.py" />
     <Compile Include="alconstants.py" />
     <Compile Include="axml.py" />
     <Compile Include="constants.py">
@@ -113,6 +117,14 @@
     <Compile Include="sql\objects\Utilities.py" />
     <Compile Include="sql\objects\View.py" />
     <Compile Include="sql\objects\__init__.py" />
+    <Compile Include="sql\tests\objects\test_graphdb.py" />
+    <Compile Include="sql\tests\objects\__init__.py" />
+    <Compile Include="sql\tests\utils.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="sql\tests\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="sql\virtual.py">
       <SubType>Code</SubType>
     </Compile>
@@ -130,7 +142,7 @@
     <Compile Include="tests\nestparser.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="sql\tests\sqltest.py" />
+    <Compile Include="sql\tests\test_sql.py" />
     <Compile Include="sql\tests\sql_newparsertest.py" />
     <Compile Include="tests\subclasses.py">
       <SubType>Code</SubType>
@@ -185,6 +197,7 @@
     <Folder Include="sql\tests\" />
     <Folder Include="sql\objects\" />
     <Folder Include="sql\objects\__pycache__\" />
+    <Folder Include="sql\tests\objects\" />
     <Folder Include="tests" />
     <Folder Include="tkinter" />
     <Folder Include="tkinter\images" />

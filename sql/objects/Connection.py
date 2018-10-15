@@ -1,10 +1,10 @@
 
 ## This Module
 from alcustoms.sql import objects
-from alcustoms.sql.objects import Table
-from alcustoms.sql.objects import View
+from alcustoms.sql.objects import Table, View, Utilities
 
 ## Builtin
+import functools
 import pathlib
 from sqlite3 import *
 
@@ -42,6 +42,17 @@ def listalltables(conn):
     tables = getalltables(conn)
     return [row['name'] for row in tables]
 
+def update_row_factory(func):
+    """ A decorator to setup advanced_rowfactory on child tables """
+    @functools.wraps(func)
+    def inner(self,*args,**kw):
+        table = func(self,*args,**kw)
+        if isinstance(table,Table.AdvancedTable):
+            if isinstance(self.row_factory,objects.AdvancedRow_Factory):
+                table.row_factory = self.row_factory.new(table)
+        return table
+    return inner
+
 ############################################
 """
                    OBJECTS
@@ -76,6 +87,13 @@ class Database(Connection):
         if row_factory:
             self.row_factory = row_factory
 
+    def execute(self,*args,**kw):
+        ## For when sql is executed manually (bypassing AdvancedTable)
+        if isinstance(self.row_factory,objects.AdvancedRow_Factory) and not self.row_factory.parent:
+            with Utilities.temp_row_factory(self,objects.dict_factory):
+                return super().execute(*args,**kw)
+        ## Otherwise, continue as normal
+        return super().execute(*args,**kw)
 
     ###############################################
     """
@@ -86,8 +104,8 @@ class Database(Connection):
     def list_constructs(self):
         """ Returns the creation sql strings for all tables and views in the connection """
         result = self.execute("""SELECT * FROM sqlite_master WHERE type="table" OR type="view";""").fetchall()
-        #return [r['sql'] for r in result]
-        return result
+        return [r['sql'] for r in result]
+        #return result
 
     ###############################################
     """
@@ -153,7 +171,25 @@ class Database(Connection):
 
         if self.parser: return self.parser(tableentry['sql'],database = self).obj
         return Table.Table(tableentry['sql'],database = self)
+    
+    @update_row_factory
+    def gettablebyid(self,rowid):
+        """ Returns a Table Object representing the table with the given rowid.
 
+        rowid should be an integer which represents the table's rowid in the sqlite_master table.
+        Raises a ValueError if the table does not exist.
+        """
+        if not isinstance(rowid,int):
+            raise TypeError("rowid should be an integer")
+        with Utilities.temp_row_factory(self,objects.dict_factory):
+            tableentry = self.execute("""SELECT sql FROM sqlite_master WHERE type="table" AND rowid=?;""",(rowid,)).fetchone()
+        if not tableentry:
+            raise ValueError(f"Table {tablename} does not exist.")
+
+        if self.parser: return self.parser(tableentry['sql'],database = self).obj.to_advancedtable()
+        return Table.AdvancedTable(tableentry['sql'],database = self)
+
+    @update_row_factory
     def getadvancedtable(self,tablename):
         """ Returns an AdvancedTable Object representing the table of tablename.
 
@@ -161,9 +197,16 @@ class Database(Connection):
         Raises a ValueError if the table does not exist.
         """
         table = self.gettable(tablename).to_advancedtable()
-        if self.row_factory == objects.advancedrow_factory:
-            table.row_factory = objects.advancedrow_factory
         return table
+
+    def gettablestats(self,tablename):
+        """ Returns the information stored in sqlite_master as a dict for the given table """
+        if isinstance(tablename,Table.Table):
+            tablename = str(tablename.name)
+        if not isinstance(tablename,str):
+            raise TypeError("Invalid tablename")
+        with Utilities.temp_row_factory(self,objects.dict_factory):
+            return self.execute("""SELECT rowid,* from sqlite_master WHERE name = ? AND type = "table";""",(tablename,)).fetchone()
 
     def addtables(self,*tables):
         """ Attempts to add the given tables to the Database.
@@ -248,5 +291,3 @@ class Database(Connection):
     def dropview(self,viewname):
         """ Removes a view from the database. viewname can be a string representing the View's name, or a View object """
         self.removeview(viewname)
-
-from alcustoms.sql.objects.graphdb import GraphDB

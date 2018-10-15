@@ -1,8 +1,8 @@
 
 from sqlite3 import OperationalError
 ## This Module
-from .. import constants,objects
-from . import Connection
+from alcustoms.sql import constants,objects
+from alcustoms.sql.objects import Connection, Utilities
 ## Builtin
 from collections import OrderedDict
 
@@ -466,9 +466,19 @@ class AdvancedTable(Table):
     def row_factory(self,value):
         if not value is None and not callable(value):
             raise TypeError("factory is not callable.")
-        if value == objects.advancedrow_factory:
-            value = objects.advancedrow_factory(self,None)
+        if isinstance(value,objects.AdvancedRow_Factory):
+            value = value.new(self)
         self._row_factory = value
+
+    @property
+    def dbstats(self):
+        """ Returns the information stored in sqlite_master as a dict """
+        return self.database.gettablestats(self)
+
+    @property
+    def id(self):
+        """ Returns the table's rowid in the sqlite_master table """
+        return self.dbstats['rowid']
 
     def parseobject(self,object):
         """ Attempts to pull attributes from a given object that match this table's column names, returning a dictionary of found attributes """
@@ -520,11 +530,13 @@ class AdvancedTable(Table):
         If query is supplied, it is currently trusted to be a valid sql statement: you are responsible for validating
         it yourself if you use this function directly.
         replacements is a list/tuple or dict of replacement values, as appropriate for your query.
-        If rowid is True, the Table's PRIMARY KEY will also be selected.
+        If rowid is True, the Table's PRIMARY KEY will also be selected. If the table's rowfactory is advancedrow_factory, rowid is always True.
         If limit is an integer, the output will be limited to the number.
         If distinct is True, DISTINCT will be added to the query.
         By default, returns all columns (Selects *). If columns is supplied, columns should be a list of column name strings in this table.
         """
+        if isinstance(self.row_factory,objects.AdvancedRow_Factory):
+            rowid = True
         if replacements is None: replacements = dict()
         if not isinstance(replacements,(list,tuple,dict)): raise ValueError("Replacements should be a List/Tuple or Dict if supplied (whichever is appropriate for your query).")
 
@@ -631,6 +643,10 @@ class AdvancedTable(Table):
 
         cursor = self.database.execute(query,replacementdict)
         return cursor.lastrowid
+
+    def insert(self, *args, **kw):
+        """ Alias for addrow """
+        return self.addrow(*args,**kw)
 
     def addmultiple(self,*rows, grouping = True):
         """ Inserts multiple rows into the Table.
@@ -824,7 +840,6 @@ class AdvancedTable(Table):
         if missing_notnulls:
             raise ValueError(f"The following columns are required: {', '.join(missing_notnulls)}")
 
-        print(select)
         indb = self.quickselect(rowid = True, **select)
         rowid = str(self.rowid)
         if indb.first():

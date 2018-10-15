@@ -1,3 +1,5 @@
+## Builtin
+import functools
 
 class temp_row_factory():
     """ A Context Manager for temporarily changing the row_factory of a connection or AdvancedTable instance
@@ -41,3 +43,17 @@ class temp_row_factory():
         self.connection.row_factory = self.original
         self.original = temp_row_factory.Null
     
+
+def temp_row_decorator(row_factory):
+    """ Creates a decorator which functions in the same manner as temp_row_factory.
+
+        
+    """
+    def deco(func):
+        """ The actual decorator """
+        @functools.wraps(func)
+        def inner(self,*args,**kw):
+            with temp_row_factory(self,row_factory):
+                return func(*args,**kw)
+        return inner
+    return deco

@@ -6,10 +6,12 @@ from xml.etree import ElementTree
 import json
 import io
 import pathlib
+import sqlite3
 import zipfile
 
 
-__all__ = ["Database","KeyValueCache",]
+__all__ = ["Database",
+           "KeyValueCache","SqliteCache",]
 
 class Database():
     """ Base Object of the ALCustoms.NOSql backend.
@@ -31,15 +33,16 @@ class Database():
             c.text = name
         return ElementTree.ElementTree(root)
 
-    def _generatecache(cachetype, file = None):
+    def _generatecache(database, cachetype, file = None):
         """" Generates a new Cache instance with validations """
-        if cachetype not in ["keyvaluecache",]:
-            raise ValueError("Invalid Cache Type.")
-
         CACHELOOKUP = {
             "keyvaluecache":KeyValueCache,
+            "sqlite3":SqliteCache,
             }
-        return CACHELOOKUP[cachetype](file = file)
+        if cachetype not in CACHELOOKUP:
+            raise ValueError("Invalid Cache Type.")
+
+        return CACHELOOKUP[cachetype](database = database, file = file)
 
     def __init__(self,file):
         """ Creates a new Database instance.
@@ -93,7 +96,7 @@ class Database():
     def _loadcache(self,key,cachetype):
         with zipfile.ZipFile(self.file,'r') as zipf:
             with zipf.open(key,'r') as cfile:
-                cache = Database._generatecache(cachetype,cfile)
+                cache = Database._generatecache(database = self,cachetype = cachetype,file = cfile)
                 return cache
 
     def _savecache(self,zipf,key,cache):
@@ -157,7 +160,7 @@ class Database():
         if key in self.caches:
             raise AttributeError(f"Duplicate Cache: {key}")
 
-        cache = Database._generatecache(cachetype)
+        cache = Database._generatecache(self,cachetype)
             
         self._caches[key] = cache
         return cache
@@ -172,7 +175,7 @@ class Database():
                 self._caches[key] = cache
             return cache
         except:
-            raise AttributeError("Invalid Cache")
+            raise AttributeError("Failed to Load Cache")
 
 class Cache():
     """ The baseclass for Cache objects.
@@ -307,3 +310,19 @@ class KeyValueCache(Cache):
                 if self._container == other._container:
                     return True
             return False
+
+class SqliteCache(Cache, sqlite3.Connection):
+    cachetype = "sqlite3"
+    def __init__(self, database, file = None, serializer = None, deserializer = None,**kw):
+        Cache.__init__(self,database = database, file = file, serializer = serializer, deserializer = deserializer)
+        if file is None: file = ":memory:"
+        sqlite3.Connection.__init__(self,file,**kw)
+
+    def _defaultserializer(db, file):
+        """ Since serialize is intended for saving the content, SqliteCache simply calls commit() """
+        db.commit()
+
+    def _defaultdeserializer(self, file):
+        """ This function does not exist because no preprocessing of the db is necessary, and because SqliteCache
+            inherits from Connection (which automatically connects to the database anyway) """
+        pass
