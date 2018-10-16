@@ -87,6 +87,13 @@ class CoordinateTests(unittest.TestCase):
                         self.assertRaisesRegex(error,result['e_regex'],
                                                excel.Coordinate,definition)
 
+    def test_coordinate_addition(self):
+        """ Tests that Coordinate.__add__ works. """
+        c1 = excel.Coordinate(1,1)
+        c2 = excel.Coordinate("1","1")
+        c3 = c1 + c2
+        self.assertEqual(c3,excel.Coordinate(2,2))
+
 class RangeTests(unittest.TestCase):
     def setUp(self):
         basicsetup(self)
@@ -251,6 +258,21 @@ class MethodCase(unittest.TestCase):
         self.assertEqual(dict(a = 1),collections.OrderedDict([("a",1),]))
         dicts = excel.EnhancedTable.from_table(table,sheet).todicts()
         self.assertEqual(excel.EnhancedTable.from_table(table,sheet).todicts(),[["Name","Value"],dict(Name="Hello",Value = 1),dict(Name="World",Value=2)])
+
+    def test_dicts_to_table_simple_add(self):
+        """ A simple test to add a new table based on dicts to a worksheet """
+        basicsetup(self)
+        ws = self.workbook.create_sheet("testsheet")
+        testdata = [dict(a = 1, b = 1, c = 1),
+                    dict(a = 2, b = 2, c = 2),
+                    dict(a = 3, b = 3, c = 3)]
+        table = excel.dicts_to_table(ws, testdata, start = "$A$1")
+        testrange = excel.Range(ws,excel.gettablesize(ws,1,1))
+        self.assertEqual(testrange.startcoord,excel.Coordinate("A1"))
+        self.assertEqual(testrange.endcoord,excel.Coordinate("C4"))
+        output = table.todicts()[1:]
+        self.assertEqual(len(output),len(testdata))
+        self.assertEqual(output,testdata)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 ## Builtin
 import collections
+import itertools
 import re
 ## Third Party
 from openpyxl import *
@@ -60,7 +61,14 @@ class Coordinate():
         return self._column.value if self._column else None
     def isabsolute(self):
         return self._column.absolute or self._row.absolute
-    def toA1string(self):
+    def toA1string(self, absolute = True):
+        """ Returns the Coordinate in A1 format.
+
+            By default, will output absolute dollar signs (ex.- A$1).
+            If absolute is False, will output both row and column as relative.
+        """
+        if not absolute:
+            return f"{utils.cell.get_column_letter(self._column.value)}{self._row.value}"
         return f'{"$" if self._row.absolute else ""}{utils.cell.get_column_letter(self._column.value)}{"$" if self._column.absolute else ""}{self._row.value}'
     def __add__(self,other):
         if isinstance(other,Coordinate):
@@ -230,7 +238,7 @@ def parseindex(value):
     ## Note, namedtuple is an instance of tuple, so this has to happen before handling tuple/lists
     if isinstance(value,Index):
         ## Index should be "row","column" (, or None for Column References)
-        if value.value not in ["row","column",None]: raise ValueError(f"Index's type should be 'row','column', or None: {value}")
+        if value.type not in ["row","column",None]: raise ValueError(f"Index's type should be 'row','column', or None: {value}")
         ## Index made by this module use column index (or None for Column References)
         if not isinstance(value.value,int) and value.value is not None: raise ValueError(f"Index's value is not an integer (or None): {value}")
         ## This module only uses True/False for absolute
@@ -571,7 +579,9 @@ class EnhancedTable(openpyxl.worksheet.table.Table):
         super().__init__(**kw)
         self.worksheet = worksheet
         self.range = Range(worksheet,self.ref)
-        self.worksheet.add_table(self)
+        ## For the moment, we are disabling this functionality
+        ## The serializer on Table seems to be serializing other attributes
+        ## self.worksheet.add_table(self)
 
     @property
     def ref(self):
@@ -683,7 +693,7 @@ def dicts_to_table(sheet, dinput, tablename = None, start = None, headers = None
     if not isinstance(dinput,(list,tuple)) or not all(isinstance(item,(dict,list,tuple)) for item in dinput):
         raise TypeError('dinput should be a list of lists or dicts')
     t1 = dinput[0].__class__
-    if any(not isinstance(item,t1.__class__) for item in dinput):
+    if any(not isinstance(item,t1) for item in dinput):
         raise TypeError("All dinputs must be the same class")
     if tablename is None: tablename = ""
     if not isinstance(tablename,str):
@@ -691,6 +701,13 @@ def dicts_to_table(sheet, dinput, tablename = None, start = None, headers = None
     table = None
     if tablename:
         table = gettablebyname(sheet,tablename)
+    else:
+        ## AutoGenerate Tablename
+        i = 1
+        while not tablename:
+            tablename = f"Table{i}"
+            t = get_table_by_name(sheet,tablename)
+            if t: tablename = None
 
     if start:
         start = Coordinate(start)
@@ -726,13 +743,30 @@ def dicts_to_table(sheet, dinput, tablename = None, start = None, headers = None
     ## Otherwise, dinput items are lists or tuples (or- theoretically- subclasses), so don't do anything
     
     ## If existing table, remove it and rewrite it
+    if table:
+        for cell in table.range.cells_by_row(value = "cell"):
+            cell.value = None
+        table.worksheet._tables.remove(table)
     ## TODO: we should probably make some attempt to NOT overwrite data in proximity if table extends beyond original constraints
 
-    ## Write Header row
-
+    ## Write Table Headers
+    for coffset,column in enumerate(headers):
+        offset = Coordinate(row=str(0),column=str(coffset))
+        cell = start + offset
+        cell = sheet[cell.toA1string()]
+        cell.value = str(column)
     ## Write table data
-    for roffset,row in enumerate(dinput):
+    ## Start writing row at 1
+    for roffset,row in enumerate(dinput, start = 1):
         for coffset,column in enumerate(headers):
-
-    ## Add/Readd Table to sheet
-    
+            offset = Coordinate(str(roffset),str(coffset))
+            cell = start + offset
+            cell = sheet[cell.toA1string()]
+            cell.value = row[coffset]
+    ## Add/Re-add Table to sheet
+    endcell = Coordinate(str(roffset),str(coffset))
+    endcell = start + endcell
+    table = openpyxl.worksheet.table.Table(displayName = tablename, ref = f"{start.toA1string(False)}:{endcell.toA1string(False)}")
+    sheet.add_table(table)
+    table = EnhancedTable.from_table(table,sheet)
+    return table
