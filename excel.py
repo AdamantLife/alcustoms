@@ -576,7 +576,7 @@ class EnhancedTable(openpyxl.worksheet.table.Table):
                              tableStyleInfo=table.tableStyleInfo, extLst=table.extLst)
     def __init__(self,worksheet, **kw):
         self.worksheet = None
-        openpyxl.worksheet.table.Table.__init__(self,**kw)
+        super().__init__(**kw)
         self.worksheet = worksheet
         self.range = Range(worksheet,self.ref)
         ## For the moment, we are disabling this functionality
