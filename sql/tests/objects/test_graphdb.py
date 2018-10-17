@@ -112,7 +112,7 @@ class EdgeCase(unittest.TestCase):
 
         ## Test with non-advancedrows
         doge = self.pets.quickselect(name = "Doge").first()
-        rowid = c.create_edge(node1 = bob.pk, node1table = self.users.id, node2 = doge.pk, node2table = self.pets.id, node1relation = "Owner", node2relation = "Owned By")
+        rowid = c.create_edge(node1 = bob.pk, node1table = self.users.name, node2 = doge.pk, node2table = self.pets.name, node1relation = "Owner", node2relation = "Owned By")
 
         edge = c.getedge(rowid)
         for advrow,node in [(bob,edge.node1),

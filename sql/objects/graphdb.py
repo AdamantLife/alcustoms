@@ -95,22 +95,22 @@ node2relation TEXT);""")
             raise ValueError("It is an error to supply a node ")
 
         if isinstance(node1,AdvancedRow):
-            node1table = node1.table.id
+            node1table = node1.table.name
             try:
                 node1 = node1.pk
             except Exception as e:
                 raise e
         if isinstance(node2,AdvancedRow):
-            node2table = node2.table.id
+            node2table = node2.table.name
             node2 = node2.pk
 
         if isinstance(node1table,str):
-            node1table = self.getadvancedtable(node1table).id
+            node1table = self.getadvancedtable(node1table).name
         if isinstance(node2table,str):
-            node2table = self.getadvancedtable(node2table).id
+            node2table = self.getadvancedtable(node2table).name
 
-        if not isinstance(node1,AdvancedRow) and (not isinstance(node1,int) or not isinstance(node1table,int))\
-            or not isinstance(node2,AdvancedRow) and (not isinstance(node2,int) or not isinstance(node2table,int)):
+        if not isinstance(node1,AdvancedRow) and (not isinstance(node1,int) or not isinstance(node1table,str))\
+            or not isinstance(node2,AdvancedRow) and (not isinstance(node2,int) or not isinstance(node2table,str)):
             raise TypeError("nodes must be either AdvancedRow objects or they must be an int and some identification for their tables must also be supplied.")
         
         if (node1relation and not isinstance(node1relation,str)) or (node2relation and not isinstance(node2relation,str)):
@@ -132,13 +132,13 @@ node2relation TEXT);""")
                 raise TypeError("It is invalid to supply both node1 and node1row/node1table (perhaps you meant node1row)")
             node1 = kw.pop("node1")
             kw['node1row'] = node1.pk
-            kw['node1table'] = node1.table.id
+            kw['node1table'] = node1.table.name
         if 'node2' in kw:
             if 'node2table' in kw or 'node2row' in kw:
                 raise TypeError("It is invalid to supply both node2 and node1row/node2table (perhaps you meant node2row)")
             node2 = kw.pop("node2")
             kw['node2row'] = node2.pk
-            kw['node2table'] = node2.table.id
+            kw['node2table'] = node2.table.name
         edgetable = self.edgetable
         with temp_row_factory(edgetable,edge_factory):
             result = edgetable.quickselect(**kw)
@@ -188,13 +188,13 @@ class Edge(AdvancedRow):
 
         if name == 'node1':
             if not self._node1tableref:
-                self._node1tableref = self.table.database.gettablebyid(self.node1table)
+                self._node1tableref = self.table.database.getadvancedtable(self.node1table)
             _node1tableref = self._node1tableref
             with temp_row_factory(self._node1tableref,node_factory):
                 return self._node1tableref.quickselect(pk = self.node1row).first()
         elif name == 'node2':
             if not self._node2tableref:
-                self._node2tableref = self.table.database.gettablebyid(self.node2table)
+                self._node2tableref = self.table.database.getadvancedtable(self.node2table)
             _node2tableref = self._node2tableref
             with temp_row_factory(self._node2tableref,node_factory):
                 return self._node2tableref.quickselect(pk = self.node2row).first()
