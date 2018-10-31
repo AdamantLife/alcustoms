@@ -60,6 +60,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="decorators.py" />
+    <Compile Include="delimparser.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="directoryinfo.py" />
     <Compile Include="emailer.py" />
     <Compile Include="excel.py">
@@ -145,6 +148,9 @@
     <Compile Include="sql\tests\test_sql.py" />
     <Compile Include="sql\tests\sql_newparsertest.py" />
     <Compile Include="tests\subclasses.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\test_delimparser.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tests\test_measurment.py">
