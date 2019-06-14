@@ -398,7 +398,8 @@ class AdvancedRow():
 
                     ## Return Row with Corresponding Foreign Key's Value
                     try:
-                        result = ftable.quickselect(**{f"{fcolumn}__eq":self.row[name]})
+                        with temp_row_factory(ftable,advancedrow_factory):
+                            result = ftable.quickselect(**{f"{fcolumn}__eq":self.row[name]})
                     except Exception as e:
                         #print(fcolumn, ftable)
                         raise e
@@ -1058,3 +1059,4 @@ class ConflictClause():
 
 ## Due to shenanigans, this will have to be imported here...
 from . import Table
+from .Utilities import temp_row_factory

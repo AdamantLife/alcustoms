@@ -36,7 +36,24 @@
     GraphDB looks to rectify this by handling the all the background work of joining these
     relationships.
 
+    When the GraphDB object is initialized on a Database file it creates a Table called
+    graphdb_edges (assuming the table does not already exist). This table maps rowids and
+    their corresponding tableids together, along with an optional relation from each row
+    to the other.
+
+    These rows are referred to as Nodes and their relations are called Edges. The GraphDB
+    Object automatically uses a special rowfactory which returns Node objects instead of
+    rows. It also has additional functions for querying the database for Edges, which are
+    rows within the graphdb_edges table.
     
+    To simplify usage, Node objects can interpret Attribute queries as Edge queries in
+    relation both to and from other Nodes. Therefore, in our above example, if the Country
+    "Italy" shares an Edge called "National Dishes" with the Food Nodes (rows) "Pizza" and
+    "Pasta", then the attribute Italy.national_dishes will return a list of Nodes
+    [Pizza Node, Pasta Node]. Additionally, if there are edges saying a Person Nodes
+    "Lives In" (node relation) the a given Country, then Italy.lives_in__this (double
+    underscore before "this") returns a list of Nodes that have the "Lives In" relation
+    to Italy. 
 """
 
 ## This Module

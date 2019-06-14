@@ -6,6 +6,12 @@ from alcustoms.sql.objects import Connection, Utilities
 ## Builtin
 from collections import OrderedDict
 
+
+class TableExistsError(ValueError):
+    def __init__(self,*args,**kw):
+        if not args: args = ["Table does not Exist",]
+        super().__init__(*args,**kw)
+
 ############################################
 """
              UTILITY FUNCTIONS
@@ -14,12 +20,12 @@ from collections import OrderedDict
 
 def getalltablerows(conn,tablename):
     """ Returns all table rows """
-    if not tableexists(conn,tablename): raise ValueError("Table does not exist in Database")
+    if not tableexists(conn,tablename): raise TableExistsError("Table does not exist in Database")
     return conn.execute(f"""SELECT * FROM {tablename};""").fetchall()
 
 def gettablecolumns(conn,tablename):
     """ Function which returns columns of a table as SQLColumn objects """
-    if not tableexists(conn,tablename): raise ValueError("Table does not exist in Database")
+    if not tableexists(conn,tablename): raise TableExistsError("Table does not exist in Database")
     sel = conn.execute(
         f"""PRAGMA table_info({tablename});"""
         ).fetchall()

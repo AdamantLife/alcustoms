@@ -2,9 +2,9 @@ import re
 
 def stripmatch(input,match,group = 0):
     """ Strips the match from the front of the string and any additional whitespace at both ends (via strip()) """
-    return input.replace(match.group(group),"",1).strip()
+    return input.replace(match.group(group),"",1)
 
-class SearchField():
+class Field():
     def __init__(self,kind,value,neg = False):
         self.kind = kind
         self.value = value
@@ -12,14 +12,16 @@ class SearchField():
     def __repr__(self):
         return f'{"" if not self.neg else "-"}{self.kind}->{self.value}'
     def __eq__(self,other):
-        if isinstance(other,SearchField):
+        if isinstance(other,Field):
             return self.kind == other.kind and self.value == other.value and self.neg == other.neg
 
 class Tokenizer():
-    def __init__(self, delimiter = ":"):
+    def __init__(self, delimiter = ":", sep = "\s", invalid = None):
         self.delimiter = delimiter
+        self.sep = sep
+        self.invalid = invalid
     def __call__(self,query):
-        return tokenize(query,delimiter = self.delimiter)
+        return tokenize(query,delimiter = self.delimiter, sep = self.sep, invalid = self.invalid)
 
 def tokenize(query,delimiter=":",sep = "\s",invalid=None):
     if delimiter in [False,None]:
@@ -54,23 +56,31 @@ def tokenize(query,delimiter=":",sep = "\s",invalid=None):
     ),re.VERBOSE|re.IGNORECASE)
 
     def _tokenize(query):
-        if not query: return None
+        ## print(">",query)
+        if not query:
+            ## print(1)
+            return None,None
         res = REGEX.match(query)
+        if not res:
+            sepre = SEPRE.match(query)
+            if sepre:
+                query = stripmatch(query,sepre,0)
+            return None,query
         value,end,neg = res.group("value"),res.group("end"),bool(res.group("neg"))
         ## If not delimiter, we are at the end of the token chain
         if not end:
-            return SearchField(value,None,neg = neg),None
+            ## print(2)
+            return Field(value,None,neg = neg),None
         query = stripmatch(query,res)
         if sep and SEPRE.match(end):
-            return SearchField(value,None,neg = neg),query
+            ## print(3)
+            return Field(value,None,neg = neg),query
         ## Else (recursive)
         kind = value
-        value = _tokenize(query)
-        if not value:
-            ## If we don't have a value, we can't complete Search Field
-            return None
-        value,query = value
-        return SearchField(kind,value,neg = neg),query
+        ## print("4a",end,sep,SEPRE.match(end),kind)
+        value,query = _tokenize(query)
+        ## print("4b")
+        return Field(kind,value,neg = neg),query
 
     output = list()
     while query:
@@ -78,7 +88,8 @@ def tokenize(query,delimiter=":",sep = "\s",invalid=None):
         if not result: return None
         result,query = result
         if isinstance(result,str):
-            result = SearchField(result,None)
+            result = Field(result,None)
+        ## print("<",result)
         output.append(result)
     if len(output) == 1: return output[0]
     return output

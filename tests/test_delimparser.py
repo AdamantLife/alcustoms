@@ -4,31 +4,33 @@ from alcustoms import delimparser
 import unittest
 
 BASICTESTS = [
-    ("Hello",delimparser.SearchField("Hello",None)),
-    ("Hello ",delimparser.SearchField("Hello",None)),
-    ("Hello{delimiter}",None),
-    ("Hello{delimiter}World",delimparser.SearchField("Hello",
-                               delimparser.SearchField("World",None))),
-    ('Hello{delimiter}"World"',delimparser.SearchField("Hello",
-                                 delimparser.SearchField('"World"',None))),
-    ('Hello{delimiter}"World"{delimiter}123',delimparser.SearchField("Hello",
-                                     delimparser.SearchField('"World"',
-                                                 delimparser.SearchField("123",None))))
+    ("Hello",delimparser.Field("Hello",None)),
+    ("Hello ",delimparser.Field("Hello",None)),
+    ("Hello{delimiter}",delimparser.Field("Hello",None)),
+    ("Hello{delimiter}World",delimparser.Field("Hello",
+                               delimparser.Field("World",None))),
+    ('Hello{delimiter}"World"',delimparser.Field("Hello",
+                                 delimparser.Field('"World"',None))),
+    ('Hello{delimiter}"World"{delimiter}123',delimparser.Field("Hello",
+                                     delimparser.Field('"World"',
+                                                 delimparser.Field("123",None))))
     ]
 
 SEPTESTS = [
-    ("Hello{sep}World",[delimparser.SearchField("Hello",None),delimparser.SearchField("World",None)]),
-    ("Hello{sep}World{sep}Foo{sep}Bar",[delimparser.SearchField("Hello",None),delimparser.SearchField("World",None),
-                                        delimparser.SearchField("Foo",None),delimparser.SearchField("Bar",None)]),
-    ("Hello{delimiter}Foo{sep}World",[delimparser.SearchField("Hello",
-                                        delimparser.SearchField("Foo",None)),
-                            delimparser.SearchField("World",None)]),
-    ("Hello{delimiter}Foo{delimiter}Bar{sep}World",[delimparser.SearchField("Hello",
-                                            delimparser.SearchField("Foo",
-                                                        delimparser.SearchField("Bar",None)
+    ("Hello{sep}World",[delimparser.Field("Hello",None),delimparser.Field("World",None)]),
+    ("Hello{sep}World{sep}Foo{sep}Bar",[delimparser.Field("Hello",None),delimparser.Field("World",None),
+                                        delimparser.Field("Foo",None),delimparser.Field("Bar",None)]),
+    ("Hello{delimiter}Foo{sep}World",[delimparser.Field("Hello",
+                                        delimparser.Field("Foo",None)),
+                            delimparser.Field("World",None)]),
+    ("Hello{delimiter}{sep}World",[delimparser.Field("Hello",None),
+                            delimparser.Field("World",None)]),
+    ("Hello{delimiter}Foo{delimiter}Bar{sep}World",[delimparser.Field("Hello",
+                                            delimparser.Field("Foo",
+                                                        delimparser.Field("Bar",None)
                                                         )
                                             ),
-                                delimparser.SearchField("World",None)]),
+                                delimparser.Field("World",None)]),
     ]
 
 class BaseCase(unittest.TestCase):
@@ -87,28 +89,28 @@ class BaseCase(unittest.TestCase):
 
 COMPTESTS = [
     ## Test letters
-    ("ABGBAGAB", "G", None, delimparser.SearchField("AB",
-                                            delimparser.SearchField("BA",
-                                                        delimparser.SearchField("AB",None)
+    ("ABGBAGAB", "G", None, delimparser.Field("AB",
+                                            delimparser.Field("BA",
+                                                        delimparser.Field("AB",None)
                                                         )
                                             )),
     ## Test case-insensitive
-    ("ABGBAGAB", "g", None, delimparser.SearchField("AB",
-                                            delimparser.SearchField("BA",
-                                                        delimparser.SearchField("AB",None)
+    ("ABGBAGAB", "g", None, delimparser.Field("AB",
+                                            delimparser.Field("BA",
+                                                        delimparser.Field("AB",None)
                                                         )
                                             )),
     ## Test Numbers
-    ("AB1B3A1AB", "1", None, delimparser.SearchField("AB",
-                                            delimparser.SearchField("B3A",
-                                                        delimparser.SearchField("AB",None)
+    ("AB1B3A1AB", "1", None, delimparser.Field("AB",
+                                            delimparser.Field("B3A",
+                                                        delimparser.Field("AB",None)
                                                         )
                                             )),
     ## Test Multiple
-    ("AB1B3GA1AB", "G1", None, delimparser.SearchField("AB",
-                                            delimparser.SearchField("B3",
-                                                        delimparser.SearchField("A",
-                                                                    delimparser.SearchField("AB",None)
+    ("AB1B3GA1AB", "G1", None, delimparser.Field("AB",
+                                            delimparser.Field("B3",
+                                                        delimparser.Field("A",
+                                                                    delimparser.Field("AB",None)
                                                                     )
                                                         
                                                         )
@@ -124,16 +126,17 @@ class ComplexCases(unittest.TestCase):
                 res = delimparser.tokenize(teststring, delimiter = delimiter, sep = sep)
                 self.assertEqual(res, result)
 
-class delimparser.tokenizerCase(unittest.TestCase):
+class TokenizerCase(unittest.TestCase):
     def test_basic(self):
         ## Default delimiter (for setting up test strings)
         delimiter = ":"
-        delimparser.tokenizer = delimparser.tokenizer(delimiter = delimiter)
+        tokenizer = delimparser.Tokenizer(delimiter = delimiter)
         for value,result in BASICTESTS:
             with self.subTest(value = value, result = result):
                 value = value.format(delimiter = delimiter)
-                res = delimparser.tokenizer(value)
+                res = tokenizer(value)
                 self.assertEqual(res, result)
 
 if __name__ == "__main__":
-    unittest.main()   
+    #unittest.main()   
+    print(delimparser.tokenize("door:name:Door1 date:<6/1/2018"))

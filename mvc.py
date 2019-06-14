@@ -47,7 +47,7 @@ class CustomEventManager():
         Otherwise, the callback method is unregistered (and will not be called with notify())
         """
         if sequence not in self.listeners:
-            raise AttributeError(_raise_badsequence(sequence,list(self.listeners)))
+            raise AttributeError(CustomEventManager._raise_badsequence(sequence,list(self.listeners)))
         if id is not None and id not in self.listeners[sequence]: raise NameError("Id is not registered with the given sequence")
         if id is None:
             self.listeners[sequence]=dict()
