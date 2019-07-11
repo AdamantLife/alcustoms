@@ -103,5 +103,61 @@ class pairdictCase(unittest.TestCase):
             self.dict[4] = 'b'
         self.assertRaises(ValueError, test)
 
+    def test_in_contains(self):
+        """ Tests that the dictionary correctly checks both sides when testing membership """
+        for value in ["a","b",3,4,(1,2),("a","b")]:
+            with self.subTest(value = value):
+                self.assertIn(value,self.dict)
+
+    def test_not_in_not_contains(self):
+        """ Tests that the dictionary does not erroneously state memembership """
+        for value in ["A",(2,1),True]:
+            with self.subTest(value = value):
+                self.assertNotIn(value,self.dict)
+
+class defaultlistCase(unittest.TestCase):
+    def test_basic(self):
+        """ Some basic tests """
+        defaultlist = subclasses.defaultlist
+        d = defaultlist()
+        ## Simple 0-index out of range
+        self.assertEqual(d[0],[])
+        self.assertEqual(d, [ [], ] )
+
+        ## Longer list
+        d = defaultlist()
+        d.extend([0,1,2])
+        self.assertEqual(d[0],0)
+        self.assertEqual(d[1],1)
+        self.assertEqual(d[2],2)
+        self.assertEqual(d[3],[])
+        self.assertEqual(d, [ 0,1,2,[] ] )
+        d[10] = 10
+        self.assertEqual(d[10],10)
+        self.assertEqual(d, [ 0,1,2,[],[],[],[],[],[],[],10 ] )
+
+
+    def test_negative(self):
+        """ Negative out-of-range test """
+        d = subclasses.defaultlist()
+        ## Negative out-of-range produces one factory object in 0 index
+        self.assertEqual(d[-1],[])
+        self.assertEqual(d, [ [], ])
+        ## Higher negatives still return the initial object without extending list
+        d[0] = "Hello"
+        self.assertEqual(d[-2],"Hello")
+        self.assertEqual(d, [ "Hello", ])
+
+        ## With larger lists
+        d = subclasses.defaultlist()
+        d.extend([0,1,2])
+        self.assertEqual(d[-1],2)
+        self.assertEqual(d,[0,1,2])
+        self.assertEqual(d[-3],0)
+        self.assertEqual(d,[0,1,2])
+        self.assertEqual(d[-100],0)
+        self.assertEqual(d,[0,1,2])
+
+
 if __name__ == "__main__":
     unittest.main()

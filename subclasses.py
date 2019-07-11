@@ -89,7 +89,7 @@ class pairdict(dict):
                 raise KeyError(f"KeyError: {key}")
     def __setitem__(self, key, value):
         ## Remove previous key (__del__ will also remove pairing from _reverse)
-        if key not in self:
+        if not super().__contains__(key):
             ## If setting via value: reorder for clarity, then remove value's previous key
             if key in self._reverse:
                 value,key = key,value
@@ -100,13 +100,13 @@ class pairdict(dict):
 
         ## Now we check the Value-Reference (which may be key or value now)
         ## This will occur in collisions
-        if key in self:
+        if super().__contains__(key):
             del self[key]
         if value in self._reverse:
             oldkey = self._reverse[value]
             del self[oldkey]
 
-        if value in self:
+        if super().__contains__(value):
             raise ValueError("Key's value already exists as a Key")
         elif key in self._reverse:
             raise ValueError("Value's key already exists as a Value")
@@ -120,7 +120,8 @@ class pairdict(dict):
             raise KeyError("unhashable type: '{value.__class__.__name__}'")
     def __delitem__(self, key):
         value = NotImplemented
-        if key not in self:
+        ## Have to use super() for member testing in order to implement __contains__
+        if not super().__contains__(key):
             if key in self._reverse:
                 value = key
                 key = self._reverse[key]
@@ -128,7 +129,44 @@ class pairdict(dict):
             value = self[key]
         del self._reverse[value]
         return super().__delitem__(key)
+    def __contains__(self,key):
+        if super().__contains__(key): return True
+        return key in self._reverse
 
+class defaultlist(list):
+    """ A class with similar functionality to defaultdict.
+
+        If given index raises an IndexError (is out of range), the factory will be called
+        to produce the output and assign it as the index. Because lists are continuous,
+        arbitrary queries of the list will result in all intervening indices being populated.
+        Querying a Negative out-of-range index will always return the first(0) index; if the
+        list is empty, the first index will be populated with factory() as normal.
+
+        defaultlist is useful when working with numerical buckets and the end result should
+        contain empty buckets for all indices between the minimum index and the maximum index.
+    """
+    def __init__(self,factory = list):
+        """ Create a new defaultlist instance. Factory should be a callable which is used to prepopulate empty indices. """
+        self.factory = factory
+
+    def __getitem__(self,index):
+        try:
+            return super().__getitem__(index)
+        except IndexError:
+            ## Negative Out-of-range integers always return the first element
+            ## (obviously, if empty this will create an element in the first slot)
+            if index < 0: return self[0]
+
+            lastindex = len(self)-1
+            self.extend([self.factory() for i in range(lastindex+1,index+1)])
+            return super().__getitem__(index)
+
+    def __setitem__(self,index,value):
+        try:
+            return super().__setitem__(index,value)
+        except IndexError:
+            self[index]
+            return super().__setitem__(index,value)
 
 """
 BELOW WAS STOLEN OFF OF INTERNET AND IS HERE FOR NOW

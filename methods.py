@@ -1,18 +1,26 @@
-﻿import collections ## reverseattributetokwargs
+﻿"""
+                alcustoms.methods
+
+        This module was originally created to house generic, ease-of-use methods, but has come
+    to simply be a repository of un-affiliated code snippets in general.
+"""
+
+import collections ## reverseattributetokwargs
 import csv ## cvsstring_to_jsonstring
-import datetime ## getlastdaydatetime
+import datetime ## getlastdaydatetime, Timer
 import io ## removenamespaces, cvsstring_to_jsonstring
 import itertools ##scanforfile, Version
 import json ## cvsstring_to_jsonstring
 import math ## roundtofraction
 import pathlib ##scanforfile
 import pprint ## minimalist_pprint_pformat
-import re ## argstoattributes, reverseattributestokwargs
+import re ## argstoattributes, reverseattributestokwargs, Timer
 import string
 import secrets ## password_generator
 import xml.etree.ElementTree as ET ## parsenamespaces
 
-## NOT ACTUALLY A METHOD, BUT I"M STORING IT HERE FOR NOW
+from alcustoms.subclasses import pairdict ## Timer
+
 class DotVersion():
     """ A container class to allow for easy comparisons between versions with dot-dilineation (i.e.- 1.2.03.40) """
     _version = "0"
@@ -48,8 +56,116 @@ class DotVersion():
             for v1,v2 in itertools.zip_longest(self.expanded,other.expanded,fillvalue = 0):
                 if v1 > v2: return False
             return True
+    def __hash__(self):
+        return hash(str(self))
+    def __str__(self):
+        return self.version
     def __repr__(self):
         return f"{self.__class__.__name__}({self.version})"
+
+class Timer():
+    """ A generic Timer for checking the runtime of code.
+
+        This class is not intended to replace utilities like timeit, but
+        rather to provide simple feedback on how long a single execution of
+        code took to run.
+
+        Usage:
+
+        with Timer() as t:
+            {execute code}
+        print(t.duration())
+    """
+    l = lookup = dict(seconds = 1)
+    l['minutes'] = 60 * l['seconds']
+    l['hours'] = l['minutes'] * 60
+    l['days'] = l['hours'] * 24
+    l.update(dict(weeks = l['days'] * 7, months = l['days'] * 30, years = l['days'] * 365))
+    del l
+    translation = pairdict({"%Y":"years","%m":"months","%W":"weeks","%d":"days",
+                            "%H":"hours","%M":"minutes","%S":"seconds","%f":'microseconds'})
+
+    def _check_values(*values):
+        keys = list(Timer.translation.keys())
+        if any(val not in keys for val in values):
+            print([val for val in values if val not in Timer.translation])
+            raise ValueError("Invalid Args for duration_dict")
+        return [Timer.translation[val] for val in sorted(values, key = lambda val: keys.index(val))]
+
+    def __init__(self):
+        """ A generic Timer for checking the runtime of code.
+
+            This class is not intended to replace utilities like timeit, but
+            rather to provide simple feedback on how long a single execution of
+            code took to run.
+        """
+        self._start = None
+        self._end = None
+    def __enter__(self):
+        self._start = datetime.datetime.now()
+        return self
+    def __exit__(self,*exc):
+        self._end = datetime.datetime.now()
+
+    @property
+    def start(self):
+        return self._start
+    @property
+    def end(self):
+        return self._end
+    @property
+    def timedelta(self):
+        if not self.start:
+           return None
+        if not self.end:
+            return datetime.datetime.now() - self.start
+        return self.end - self.start
+
+    def duration(self,format = "%H:%M:%S"):
+        """ Returns the duration of the Timer as a formatted string.
+        
+            Format options are: %Y (years), %m (months), %W (weeks), %d (days), %H (hours),
+            %M (minutes), %S (seconds), %f (microseconds). Days are considered 24 Hours;
+            Weeks, 7 days; Months, 30 days; and Years, 365 days.
+            The output is simplified for the given format (seconds will be rounded if 
+            microseconds are not in the format). For example, a duration of 3661 total_seconds
+            with format = "%H:%S" would return the string "1:61". The default format is "%H:%M:%S".
+            If the Timer has not been started, returns None.
+            If the Timer has not ended, bases he duration off of the current time.
+        """
+        values = re.findall("%\w",format)
+        names = Timer._check_values(*values)
+        duration = self.duration_dict(*values)
+        for val in names:
+            format = re.sub(Timer.translation[val],str(duration[val]),format)
+        return format
+        
+    def duration_dict(self,*values):
+        """ Returns the duration of the Timer as a dict of simplified terms based on supplied values.
+            
+            For example, 3661 total_seconds with *args ("%H","%M","%S") would be simplified to
+            dict(hour = 1, minute = 1, second = 1) ).
+
+            If the Timer has not been started, returns None.
+            If the Timer has not ended, bases he duration off of the current time.
+        """
+        names = Timer._check_values(*values)
+        if not names:
+            names = list(Timer.translation.values())
+        delta = self.timedelta
+        total = delta.total_seconds()
+        output = dict()
+        for name in names:
+            if name == "microseconds":
+                output[name] = delta.microseconds
+            else:
+                output[name],total = divmod(total,Timer.lookup[name])
+                output[name] = int(output[name])
+        return output
+
+class DurationDelta(datetime.timedelta):
+    """ A version of datetime.timedelta adapted for strftime functions """
+    """ TODO """
 
 def linestolist(_string,output = None):
     """ Converts a line-separated list into a list.
@@ -811,6 +927,30 @@ def password_generator(bigdict = None):
         else:
             out.append("".join([str(secrets.choice(string.digits)) for x in range(secrets.randbelow(3)+3)]))
     return " ".join(out)
+
+def pprinttypes(item,level = 0):
+    """ Function for pretty-printing the classname of an item or a datastructure.
+
+        item is the initial item to print the class of. If it is a mapping,
+        the indent level will be incremented and each key in the mapping will
+        be passed to this function. If the item is otherwise iterable, the same
+        will be done for each of the iterable's items.
+
+        level is the current indent level. Default is 0 (no indent). Each
+        indent level is 2 spaces.
+
+        This method returns the resulting string of all items joined by
+        a newline character.
+    """
+    out = level*2*" "+item.__class__.__name__
+    children = []
+    if isinstance(item,collections.abc.Mapping):
+        for v in item.values():
+            children.append(printtypes(v,level+1))
+    elif isiterable(item):
+        for v in item:
+            children.append(printtypes(v,level+1))
+    return out+ "\n" + "\n".join(children)
 
 if __name__=='__main__':
     pass

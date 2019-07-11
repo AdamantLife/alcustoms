@@ -1,6 +1,3 @@
-import collections ## Used to collate keys when headers are not supplied (via collections.OrderedDict)
-import functools ## Decorators: validate_colwidths. (via functools.wraps)
-
 """
                    A Module for Outputting Monospaced Text Tables
 
@@ -18,6 +15,8 @@ import functools ## Decorators: validate_colwidths. (via functools.wraps)
         Add Table Border validation.
         Adjust values to show when they're truncated.
 """
+import collections ## Used to collate keys when headers are not supplied (via collections.OrderedDict)
+import functools ## Decorators: validate_colwidths. (via functools.wraps)
 
 def validate_title(func):
     @functools.wraps(func)

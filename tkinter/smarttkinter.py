@@ -50,7 +50,7 @@ def massgrid(parentwidget,width=None,height=None,**kw):
     if not width and not height: return massgrid_square(parentwidget,**kw)
     if width:
         for i,child in enumerate(parentwidget.winfo_children()):
-            child.grid(row = i//width, column = i%width)
+            child.grid(row = i//width, column = i%width,**kw)
 
 
 def massgrid_configure(parentwidget,**kw):
@@ -730,6 +730,49 @@ class ALFont():
     def returnfont(self,fontdict):
         return [fontdict['name'],fontdict['size'],fontdict['style']]
 
+class CallbackText(tk.Text):
+    """ Stolen from Bryan Oakley: https://stackoverflow.com/a/40618152/3225832"""
+    def __init__(self, *args, **kwargs):
+        """A text widget that report on internal widget commands"""
+        tk.Text.__init__(self, *args, **kwargs)
+
+        # create a proxy for the underlying widget
+        self._orig = self._w + "_orig"
+        self.tk.call("rename", self._w, self._orig)
+        self.tk.createcommand(self._w, self._proxy)
+
+    def _proxy(self, command, *args):
+        cmd = (self._orig, command) + args
+        result = self.tk.call(cmd)
+
+        if command in ("insert", "delete", "replace"):
+            self.event_generate("<<TextModified>>")
+
+        return result
+
+class ScrolledWidget(Pane):
+    """ Adapted from tkinter.scrolledtext """
+    def __init__(self, parent, widget,*args,**kwargs):
+        super().__init__(parent)
+        self.vbar = tk.Scrollbar(self)
+        self.vbar.pack(side='right', fill='y')
+
+        kwargs['yscrollcommand']=self.vbar.set
+        self.widget = widget(self, *args, **kwargs)
+        self.widget.pack(side='left',fill='both',expand=True)
+        self.vbar['command'] = self.widget.yview
+
+        widget_methods = set(vars(widget).keys())
+        print(widget_methods)
+        frame_methods = vars(tk.Pack).keys() | vars(tk.Grid).keys() | vars(tk.Place).keys()
+        print(frame_methods)
+        ## Don't overwrite packing methods
+        methods = widget_methods.difference(frame_methods)
+        for m in widget_methods:
+            print(".",m)
+            if m[0]!='_' and m!='config' and m!='configure':
+                print(m,getattr(widget,m))
+                setattr(self, m, getattr(widget,m))
 
 if __name__=='__main__':
     font=ALFont()

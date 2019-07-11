@@ -2,7 +2,6 @@ import csv
 import itertools
 import pathlib
 
-rootdirectory="c://"
 
 class Directory():
     def __init__(self,path):
@@ -47,6 +46,7 @@ class Directory():
         return self.path.__repr__()
 
 if __name__ == "__main__":
+    rootdirectory=list(pathlib.Path.cwd().parents)[-1]
     directory=Directory(pathlib.Path(rootdirectory))
     directory.resolvefullsize()
     alldirectories=directory.getalldirectories()
