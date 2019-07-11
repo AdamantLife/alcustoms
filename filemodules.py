@@ -24,7 +24,7 @@ class FileBackupManager():
                 return result
         return decor
 
-    def __init__(self, file, backup=None, mkdirs = False, overwrite = False):
+    def __init__(self, file, backup=None, mkdirs = False, overwrite = False, removebackup = False):
         """ Creates a new FileBackupManager.
         file should be the file to be copied and must exist.
         backup is the target location for the backup copy; if not supplied, "backup_"
@@ -40,6 +40,7 @@ class FileBackupManager():
         self.backup = pathlib.Path(backup)
         self.mkdirs = mkdirs
         self.overwrite=overwrite    
+        self.removebackup = removebackup
         self._openfile = None
         self._openargs = ()
         self._openkwargs = None
@@ -48,7 +49,7 @@ class FileBackupManager():
 
         Closes any file opened as part of the context manager.
         If an exception occurred during execution, reverts file to saved copy.
-        Removes the backup file.
+        Removes the backup file if self.removebackup
         """
         ## An Exception occurred after the FBM was called()
         if self._openfile and not self._openfile.closed:
@@ -62,8 +63,9 @@ class FileBackupManager():
         ## If Exception occurred, restore file
         if exception:
             shutil.copy(self.backup,self.file)
-        ## Regardless of result, remove backup file
-        self.backup.unlink()
+        ## Regardless of errors, remove backup file if removebackup
+        if self.removebackup:
+            self.backup.unlink()
     def __call__(self,*args,**kw):
         """ This method allows for the FBM Instance to be used to open the file as part of entering the context """
         self._openargs=args
