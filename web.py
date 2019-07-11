@@ -1,9 +1,14 @@
 ## Builtin
 import collections
+import copy
 import functools
+import hashlib
 import io
 import itertools
+import pathlib
+import pickle
 import re
+import shutil
 import socket
 import urllib.request as urequest, urllib.error as uerror
 ## 3rd Party
@@ -78,6 +83,69 @@ def getimagefromurl(imgurl):
 ######################################################################################################################
 
 USERAGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36"
+
+class CachedSession(requests.Session):
+    """ A Session Object which Caches responses and checks for Cached responses before sending. """
+    def __init__(self,*args,cache = None, age = None,**kw):
+        """ Creates a new CachedSession.
+
+            cache should be a string or PathLike object pointing to a directory to store carched responses.
+            If omitted, a new directory in the cwd will be created called "requests_cache".
+
+            If provided, age should be a positive datetime.timedelta instance and is used to determine
+            how often a cached page should be replaced with a new response. If omitted, age is ignored
+            and all cached responses will be used. If datetime.timedelta.total_seconds() is 0, no caches
+            will be used (though this Session will continue to cache responses).
+        """
+        super().__init__(*args,**kw)
+        if cache is None:
+            cache = (pathlib.Path.cwd() / "requests_cache").resolve()
+            if not cache.exists(): cache.mkdir()
+        elif isinstance(cache,str):
+            cache = pathlib.Path(cache).resolve()
+        elif not hasattr(cache,"__fspath__"):
+            raise TypeError("Invalid cache: Cache should be a string or PathLike object")
+        cache = pathlib.Path(cache.__fspath__()).resolve()
+        if not cache.exists():
+            raise FileNotFoundError("Missing cache: cache does not exist.")
+        if not cache.is_dir():
+            raise ValueError("Invalid cache: cache is not a directory")
+        self.cache = cache
+
+        if age:
+            if not isinstance(age,datetime.timedelta):
+                raise TypeError("Invalid age: age should be a positive datetime.timedelta instance")
+            if age.total_seconds() < 0:
+                raise ValueError("Invalid age: age should be a positive datetime.timedelta instance")
+        self.age = age
+
+    def makefilename(self,prep):
+        """ Constructs and returns the filename used to save the Response from the given Request """
+        ## Maxlen on Windows is 260 ( minus one null character?)
+        ## Subtract path length, and divide by 2 because hexdigest doubles length
+        maxlen = (259 - len(str(self.cache))) // 2
+        ## Use shake to dictate resulting length (- .ext length), and add file extension
+        filename = str(hashlib.shake_128(f"{prep.path_url}{self._format_headers(prep)}{prep.body}".encode()).hexdigest(maxlen - 7))+".pickle"
+        return filename
+
+    def send(self,prep,**kwargs):
+        filename = self.makefilename(prep)
+        file = (self.cache/filename).resolve()
+        if file.exists():
+            ## If age is None
+            if not self.age\
+                or datetime.datetime.now() - self.age < datetime.datetime.fromtimestamp(file.stat().st_ctime): ## If maximum-old < (older than) creation time of pickle
+                with open(file,'rb') as f:
+                    return pickle.load(f)
+        resp = super().send(prep,**kwargs)
+        if resp.ok:
+            with open(file,'wb') as f:
+                pickle.dump(resp,f)
+        return resp
+
+    def _format_headers(self,prep):
+        """ Formats the headers dict into a string """
+        return "&".join(f"{k}={v}" for k,v in prep.headers.items())
 
 def session_decorator_factory(**options):
     """ Returns a decorator that can be used to validate the session parameter and, if None, create a new session with the given options (per getbasicsession) """
@@ -192,6 +260,48 @@ def requests_response_to_soup(response, encoding = None, parser = "html.parser")
     html = requests_response_to_html(response, encoding = encoding)
     return bs4.BeautifulSoup(html, parser)
 
+def requests_getrawimage(imgurl,session = None, headers = None):
+    """ Downloads the given image into streaming requsts.response.raw data and then returns the reference """
+    if not imgurl.startswith("http:") and not imgurl.startswith("https:"):
+        imgurl = "https:"+imgurl
+    resp = session.get(imgurl,headers=headers, stream = True)
+    if resp.status_code == 200:
+        resp.raw.decode_content = True
+    else:
+        resp.close()
+    return resp
+
+def requests_downloadimage(imgurl,directory = None, session = None):
+    ''' Downloads images
+    
+    If directory does not exist, it is created.
+    If directory is not provided, the cwd is used.
+    It is an error to supply a non-directory as directory.
+    If url request fails, will return None, otherwise, the filepath to the object
+    '''
+    if session is None: session = requests.Session()
+    if not directory:
+        directory = pathlib.Path.cwd()
+    else:
+        directory = pathlib.Path(directory).resolve()
+    if not directory.exists():
+        directory.mkdir()
+    else:
+        if not directory.is_dir():
+            raise ValueError("Invalid directory location")
+    filepath = (directory / pathlib.Path(imgurl).name).resolve()
+    response = requests_getrawimage(imgurl,session=session)
+    imgdata = response.raw
+    print(imgdata)
+    if imgdata:
+        with open(filepath,'wb') as f:
+            shutil.copyfileobj(imgdata, f)
+    else:
+        response.close()
+        return None
+    response.close()
+    return filepath
+
 
 ######################################################################################################################
 """-------------------------------------------------------------------------------------------------------------------
@@ -226,7 +336,7 @@ def bs4_find_with_child(child,findtag = None, re_text = None, **options):
     ## ['<p>that will find <span class="awesome">this awesome span</span> but <span>none of the other</span></p>','<p><span class="awesome">Pretty groovey, ey?</span></p>']
     """
     if not re_text is None:
-        options['text'] = re.compile(re_text)
+        options['string'] = re.compile(re_text)
     def finder(element):
         """ Returns an element with children that match the given description """
         if findtag and not element.name == findtag:
@@ -243,7 +353,7 @@ def bs4_load_page_from_file(file, openfileargs = dict(), parser = "html.parser")
 
 HEADERFINDER = bs4_find_with_child("th",findtag = "tr")
 BODYFINDER = bs4_find_with_child("td",findtag = "tr")
-def bs4_table_to_dicts(table, join=": ", missing = None, stripped_strings = True, headers = None):
+def bs4_table_to_dicts(table, join=": ", missing = None, stripped_strings = True, headers = None, reference = False):
     """ Converts an HTML table to a list of dicts.
 
     table should be a bs4 Element.
@@ -253,6 +363,7 @@ def bs4_table_to_dicts(table, join=": ", missing = None, stripped_strings = True
     If headers is supplied, headers should be a list of lists of strings and will be used in place of any headers that exist on
     the table. Note that they are "lists-of-lists"; the headers should be a 2d array (even if there is only one row of headers)
     Any extra values on a row (values in excess of the headers/keys) will be stored as "__extra"
+    If reference is True (default False), include a key called "__row" which contains the bs4.Element for the tr.
     """
     if not isinstance(table,bs4.Tag): raise ValueError("Invalid Table")
     body = table.find("tbody")
@@ -272,7 +383,8 @@ def bs4_table_to_dicts(table, join=": ", missing = None, stripped_strings = True
             headers = headers("tr")
             ## Double check that header is actually populated (as above)
             if not headers: raise AttributeError("Could not find Headers of table")
-        headers = [[{"text":" ".join(header.stripped_strings), "rowspan":int(header.get('rowspan',0)), "colspan":int(header.get('colspan',0))} for header in row if header.name == "th"] for row in headers]
+        ## Some sites inappropriately use td for headers
+        headers = [[{"text":" ".join(header.stripped_strings), "rowspan":int(header.get('rowspan',0)), "colspan":int(header.get('colspan',0))} for header in row if header.name in ("th","td")] for row in headers]
 
     ## If tbody not used
     if not body:
@@ -365,8 +477,21 @@ def bs4_table_to_dicts(table, join=": ", missing = None, stripped_strings = True
     collen = len(columns)
     output = list()
     ## Create output dicts
-    for row in body:
+    ## Using while instead of for-loop to make rowspans easier
+    while body:
+        row = body.pop(0)
         cells = row("td", recursive = False)
+
+        for i,cell in enumerate(cells):
+            ## Hande Rowspans
+            if int(cell.get("rowspan",0)) > 1:
+                ## Like headers, deincrement rowspan and
+                ## reinsert copy of cell into next row
+                newcell = copy.copy(cell)
+                newcell['rowspan'] = int(cell['rowspan']) - 1
+                body[0].insert(i,newcell)
+
+        ## Adjust output for stripped strings
         if stripped_strings:
             cells = [" ".join(cell.stripped_strings) for cell in cells]
         ## Split off any extra columns that don't have headers
@@ -382,6 +507,8 @@ def bs4_table_to_dicts(table, join=": ", missing = None, stripped_strings = True
             else: out[k] = [out[k],v]
         if extra:
             out["__extra"] = extra
+        if reference:
+            out["__row"] = row
         output.append(out)
 
     ## All Done!
@@ -395,3 +522,15 @@ def getsoupfromfile(filename):
     """ Reads a file and returns the bs4 Soup representation of it """
     with open(filename,'r') as f:
         return getsoupfromhtml(f.read())
+
+def bs4_parse_style(tag):
+    """ If tag has a style attribute, parses the style attribute into a dict """
+    if not isinstance(tag, bs4.Tag):
+        raise TypeError("tag must be a bs4.Tag Object")
+    style = tag.get("style")
+    if style:
+        style = [s.strip().split(":")       ## 3) Strip extra whitespace and split key/value pair on colon
+                 for s in style.split(";")  ## 1) Split styles on separator-semicolon
+                 if s.strip()               ## 2) Drop empties (trailing semicolon will produce an empty string)
+                 ]
+        tag['style'] = dict(style)

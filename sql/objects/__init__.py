@@ -364,6 +364,7 @@ class AdvancedRow():
         if not isinstance(table,Table.AdvancedTable):
             raise AttributeError("table should be an alcustoms.sql.AdvancedTable object")
         self.table = table
+        self.row_factory = table.row_factory
         self.cursor = cursor
         self.row = dict_factory(cursor,row)
 
@@ -394,7 +395,9 @@ class AdvancedRow():
                         fcolumn = fcolumn[index]
 
                     conn = self.table.database
-                    ftable = conn.getadvancedtable(ftable)
+                    ## Make sure that you replicate the type of row_factory used to create this object
+                    with Utilities.temp_row_factory(conn,self.row_factory):
+                        ftable = conn.getadvancedtable(ftable)
 
                     ## Return Row with Corresponding Foreign Key's Value
                     try:

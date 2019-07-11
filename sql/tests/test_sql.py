@@ -926,7 +926,7 @@ class AdvancedTableCase(unittest.TestCase):
         user = table.quickselect(fname="John").first()
         ## Update where userid = user => user.userid
         newemail = "spammail@spam.com"
-        table.quickupdate(constraints = {"userid":user}, email = newemail)
+        table.quickupdate(WHERE = {"userid":user}, email = newemail)
         newuser = table.quickselect(fname = "John").first()
         self.assertNotEqual(user,newuser)
         self.assertEqual(newuser.email,newemail)
@@ -1098,25 +1098,25 @@ class AdvancedTableCase(unittest.TestCase):
 
         ## Test one constraint
         utils.populatetesttable(self)
-        testtable.quickupdate(constraints = dict(value__lt=2), name="Bizzbazz")
+        testtable.quickupdate(WHERE = dict(value__lt=2), name="Bizzbazz")
         ## rowid=1/(Hello,1) should have name = "Bizzbazz" instead
         self.assertListEqual(testtable.selectall(rowid=True),[(1,"Bizzbazz",1),(2,"World",2)])
 
         ## Test Multiple Constraints
         utils.populatetesttable(self)
-        testtable.quickupdate(constraints = dict(value__gte=2,name__likeany="orl"), name="BizzBar")
+        testtable.quickupdate(WHERE = dict(value__gte=2,name__likeany="orl"), name="BizzBar")
         ## rowid=2/(World,2) should have name = "BizzBar" instead
         self.assertListEqual(testtable.selectall(rowid=True),[(1,"Hello",1),(2,"BizzBar",2)])
 
         ## Test Multiple Sets
         utils.populatetesttable(self)
-        testtable.quickupdate(constraints = dict(value__lte=2), name="Bang", value = 3)
+        testtable.quickupdate(WHERE = dict(value__lte=2), name="Bang", value = 3)
         ## Both rows should be updated to be identical (outside of rowid)
         self.assertListEqual(testtable.selectall(rowid=True),[(1,"Bang",3),(2,"Bang",3)])
 
         ## Test Mutliple Constraints with no result selected
         utils.populatetesttable(self)
-        testtable.quickupdate(constraints = dict(value__gte=0, name__like="Foobar"), name="Can't Touch This!")
+        testtable.quickupdate(WHERE = dict(value__gte=0, name__like="Foobar"), name="Can't Touch This!")
         ## Both rows should be untouched
         self.assertListEqual(testtable.selectall(),[("Hello",1),("World",2)])
 
@@ -1125,7 +1125,7 @@ class AdvancedTableCase(unittest.TestCase):
         utils.populatetesttable(self)
         testtable = self.connection.getadvancedtable("testtable")
         self.assertRaises(ValueError,testtable.quickupdate, constriants = "Hello")
-        self.assertRaises(ValueError, testtable.quickupdate, constraints = dict(notacolumn=True))
+        self.assertRaises(ValueError, testtable.quickupdate, WHERE = dict(notacolumn=True))
         self.assertRaises(ValueError, testtable.quickupdate, notacolumn = False)
         ## quickupdate does not accept positional arguements
         self.assertRaises(TypeError, testtable.quickupdate, dict(badconstraint = 0))
@@ -1226,7 +1226,7 @@ class AdvancedTableCase(unittest.TestCase):
         self.assertEqual(result.first(),testuserrowid)
 
         ## Test get_or_addrow adds a new row even if the row differs by one
-        del testuser['email']
+        testuser['email'] = "internet@email.com"
         result = table.get_or_addrow(**testuser)
         self.assertTrue(result)
         result = result.first()
@@ -1355,6 +1355,34 @@ class AdvancedRowCase(unittest.TestCase):
         ## TODO: Add intermediary tests
         self.assertIsInstance(email,str)
         self.assertEqual(email,"jdoe2@email.internet")
+
+    def test_deep_tabletraversal_wrong_rowfactory(self):
+        """ Tests that traversal still works regardless of what the connection (or table's) row_factory is set to.
+        
+            This function is basically test_deep_tabletraversal, but it changes the row_factory of both connection
+            and table after initial queries: the AdvancedRow should not be influenced by other Objects' row_factories.
+        """
+        self.connection.row_factory = objects.advancedrow_factory
+        table = self.connection.getadvancedtable("comments")
+        ## Change Connection row_factory
+        self.connection.row_factory = sql.dict_factory
+        
+        ## row should still be advancedrow
+        row = table.quickselect(pk = 1)[0]
+        self.assertIsInstance(row,sql.AdvancedRow)
+        ## Traversal should still work even though connection's row_factory has changed
+        post = row.pid
+        self.assertIsInstance(post,sql.AdvancedRow)
+
+        ## Change original Table row_factory
+        table.row_factory = sql.dict_factory
+        ## Try traversing
+        user = post.userid
+        self.assertIsInstance(user,sql.AdvancedRow)
+        ## Try Deep Traversal from beginning
+        email = row.pid.userid.email
+        self.assertEqual(email,"jdoe2@email.internet")
+
 
     def test_equality(self):
         """ Tests that two AdvancedRows are equal so long as their rows are equal and their table is equal """

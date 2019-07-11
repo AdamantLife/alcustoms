@@ -498,7 +498,7 @@ class AdvancedTable(Table):
         """
         return self.select(rowid=rowid)
 
-    def quickselect(self,rowid = False, limit = False, distinct = False, columns = None, **kw):
+    def quickselect(self,*,rowid = False, limit = False, distinct = False, columns = None, **kw):
         """ A Django-style filter method
 
         Uses the Table's Factory.
@@ -769,19 +769,19 @@ class AdvancedTable(Table):
         """ Alias for addmultiple """
         return self.addmultiple(*args,**kw)
 
-    def quickupdate(self, *, constraints = None, **kwargs):
+    def quickupdate(self, *, WHERE = None, **kwargs):
         """ Updates the database with the given values under simple constraints.
 
-        constraints should be a dictionary with the same options as quickselect.
+        WHERE should be a dictionary with the same options as quickselect.
         All other keyword arguements should be columnname keywords with values appropriate for the Table.
         NOTE! This function currently does not validate any of the selection values; for example:
         quickupdate(column__like = "%") => "WHERE column LIKE %" => UPDATE EVERYTHING!
         """
-        if not constraints and not kwargs: return
-        if constraints is None: constraints = dict()
-        elif not isinstance(constraints,dict): raise ValueError("constriants must be a dict of valid keywords")
+        if not WHERE and not kwargs: return
+        if WHERE is None: WHERE = dict()
+        elif not isinstance(WHERE,dict): raise ValueError("constriants must be a dict of valid keywords")
         replacer = objects.ReplacementFactory()
-        selstrings,selreplacements = objects._selectqueryparser(self.rowid,list(self.columns),_replacer = replacer, rowid = self.rowid, **constraints)
+        selstrings,selreplacements = objects._selectqueryparser(self.rowid,list(self.columns),_replacer = replacer, rowid = self.rowid, **WHERE)
 
         columnnames = list(self._columns)
         for k,v in kwargs.items():
@@ -830,15 +830,18 @@ class AdvancedTable(Table):
         """ This is a convenience function to check if such a row exists before adding it. If the row exists, then returns the existing rowids. Either way, returns a QueryResult.
         
         """
-        select = {columnname:None for columnname,column in self.columns.items() if not column.isrowid}
+        select = {columnname:None for columnname,column in self.columns.items() if not column.isrowid and column.notnull}
         for key in select:
             if key in kwargs:
                 select[key] = kwargs.pop(key)
-        if kwargs:
-            raise ValueError("get_or_addrow recieved invalid columns")
         missing_notnulls = [column for column,value in select.items() if value is None and self.columns[column].notnull]
         if missing_notnulls:
             raise ValueError(f"The following columns are required: {', '.join(missing_notnulls)}")
+
+        for key,value in kwargs.items():
+            if key not in self.columns:
+                raise ValueError("get_or_addrow recieved invalid columns")
+            select[key] = value
 
         indb = self.quickselect(rowid = True, **select)
         rowid = str(self.rowid)

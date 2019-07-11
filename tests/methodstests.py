@@ -189,5 +189,20 @@ C = D"""),
                 output = MPF(input)
                 self.assertEqual(output,result)
 
+import datetime
+Timer = methods.Timer
+class TimerCase(unittest.TestCase):
+    def test_basic(self):
+        timer = Timer()
+        now = datetime.datetime.now()
+        timer._start = now
+        delta = datetime.timedelta(seconds = 5)
+        end = now + delta
+        timer._end = end
+        self.assertEqual(timer.timedelta,delta)
+        self.assertEqual(timer.duration_dict("%S"),dict(seconds=5))
+        self.assertEqual(timer.duration(),"0:0:5")
+
+
 if __name__ == "__main__":
     unittest.main()

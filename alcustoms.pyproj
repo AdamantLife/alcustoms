@@ -24,6 +24,7 @@
     <Content Include="big.txt" />
     <Content Include="LICENSE" />
     <Content Include="Programs\README.md" />
+    <Content Include="requirements.txt" />
     <Content Include="sql\objects\__pycache__\Connection.cpython-36.pyc" />
     <Content Include="sql\objects\__pycache__\Table.cpython-36.pyc" />
     <Content Include="sql\objects\__pycache__\View.cpython-36.pyc" />
@@ -56,6 +57,9 @@
     <Compile Include="albox.py" />
     <Compile Include="alconstants.py" />
     <Compile Include="axml.py" />
+    <Compile Include="complextags.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="constants.py">
       <SubType>Code</SubType>
     </Compile>
@@ -76,6 +80,9 @@
     <Compile Include="gtk\mvc.py" />
     <Compile Include="gtk\__init__.py" />
     <Compile Include="images.py" />
+    <Compile Include="inspection.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="measurement.py">
       <SubType>Code</SubType>
     </Compile>
@@ -119,6 +126,12 @@
     <Compile Include="sql\objects\__init__.py" />
     <Compile Include="sql\tests\objects\test_graphdb.py" />
     <Compile Include="sql\tests\objects\__init__.py" />
+    <Compile Include="tests\decorators.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\test_complextags.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="sql\tests\utils.py">
       <SubType>Code</SubType>
     </Compile>
@@ -159,6 +172,9 @@
     <Compile Include="tests\web.py" />
     <Compile Include="tests\__init__.py" />
     <Compile Include="texttable.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="textwrapper.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tkinter\adanotebook.py" />

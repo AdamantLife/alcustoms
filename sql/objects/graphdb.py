@@ -217,6 +217,7 @@ class Node(AdvancedRow):
             db = self.table.database
             if name == "edges":
                 result = db.getedge(node1 = self) + db.getedge(node2 = self)
+                return result
             else:
                 result = parse_nodeattr(self,name)
             if not result:
