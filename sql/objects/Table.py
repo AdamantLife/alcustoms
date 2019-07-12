@@ -6,6 +6,11 @@ from alcustoms.sql.objects import Connection, Utilities
 ## Builtin
 from collections import OrderedDict
 
+class TableExistsError(ValueError):
+    def __init__(self,*args,**kw):
+        if not args: args = ["Table does not Exist",]
+        super().__init__(*args,**kw)
+
 ############################################
 """
              UTILITY FUNCTIONS
@@ -14,12 +19,12 @@ from collections import OrderedDict
 
 def getalltablerows(conn,tablename):
     """ Returns all table rows """
-    if not tableexists(conn,tablename): raise ValueError("Table does not exist in Database")
+    if not tableexists(conn,tablename): raise TableExistsError("Table does not exist in Database")
     return conn.execute(f"""SELECT * FROM {tablename};""").fetchall()
 
 def gettablecolumns(conn,tablename):
     """ Function which returns columns of a table as SQLColumn objects """
-    if not tableexists(conn,tablename): raise ValueError("Table does not exist in Database")
+    if not tableexists(conn,tablename): raise TableExistsError("Table does not exist in Database")
     sel = conn.execute(
         f"""PRAGMA table_info({tablename});"""
         ).fetchall()
@@ -395,6 +400,22 @@ class Table():
         """
         return AdvancedTable.from_table(self,database = database)
 
+    def copy_table(self):
+        other = self.__class__(self.definition,_parser = False)
+        self._Table__copy_structure(other)
+        return other
+
+    def __copy_structure(self, other):
+        other._name = self._name
+        other._database = self._database
+        other._parser = self._parser
+        other._istemporary = self._istemporary
+        other._ifnotexists = self._ifnotexists
+        other._norowid = self._norowid
+        other._columns = self._columns.copy()
+        other._comments = self._comments
+        other._tableconstraints = self._tableconstraints
+
     def __repr__(self):
         return f"{self.__class__.__name__} Object: {self.name}"
 
@@ -680,6 +701,8 @@ class AdvancedTable(Table):
         grouping is uses, the rowids may not be in ascending order).
         """
         if not rows: return
+        if len(rows) == 1:
+            return [self.addrow(**rows[0]),]
         objs,dicts = list(),list()
         ## Sort based on processing necessity
         for i,row in enumerate(rows):
@@ -867,3 +890,12 @@ class AdvancedTable(Table):
     def drop(self):
         """ Drops the table from it's database """
         self.remove()
+
+    def copy_table(self):
+        other = self.__class__(self._definition, self.database, _parser = False)
+        self._Table__copy_structure(other)
+        self._AdvancedTable__copy_structure(other)
+        return other
+
+    def __copy_structure(self,other):
+        other._row_factory = self._row_factory

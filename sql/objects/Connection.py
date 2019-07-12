@@ -14,6 +14,14 @@ from sqlite3 import *
                                          """
 ############################################
 
+SQLITE_MASTER_SCHEMA = """CREATE TABLE sqlite_master (
+  type TEXT,
+  name TEXT,
+  tbl_name TEXT,
+  rootpage INTEGER,
+  sql TEXT
+);"""
+
 def createdatabase(filepath):
     """ Creates a .db file at filepath and returns a pathlib.Path object of the filepath
 
@@ -165,9 +173,12 @@ class Database(Connection):
         tablename should be the string name of an existing table (including schema name for attached tables).
         Raises a ValueError if the table does not exist.
         """
-        tableentry = self.execute("""SELECT sql FROM sqlite_master WHERE type="table" AND tbl_name=?;""",(str(tablename),)).fetchone()
-        if not tableentry:
-            raise ValueError(f"Table {tablename} does not exist.")
+        if tablename != "sqlite_master":
+            tableentry = self.execute("""SELECT sql FROM sqlite_master WHERE type="table" AND tbl_name=?;""",(str(tablename),)).fetchone()
+            if not tableentry:
+                raise ValueError(f"Table {tablename} does not exist.")
+        else:
+            tableentry = {"sql":SQLITE_MASTER_SCHEMA}
 
         if self.parser: return self.parser(tableentry['sql'],database = self).obj
         return Table.Table(tableentry['sql'],database = self)
