@@ -230,7 +230,7 @@ class Node(AdvancedRow):
             return self.__dict__[name]
         try:
             result = super().__getattribute__(name)
-        except Exception as e:
+        except AttributeError as e:
             db = self.table.database
             if name == "edges":
                 result = db.getedge(node1 = self) + db.getedge(node2 = self)

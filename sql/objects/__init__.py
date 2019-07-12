@@ -386,7 +386,7 @@ class AdvancedRow():
                     ftable = constraint.foreigntable
                     fcolumn = constraint.foreigncolumns
                     if isinstance(constraint,ColumnReferenceConstraint):
-                        fcolumn = fcolumn[0]
+                        if fcolumn: fcolumn = fcolumn[0]
                     elif isinstance(constraint,TableReferenceConstraint):
                         ## Foreign Key (*columns) References {ftable}(*fcolumns)
                         ## => *columns should be index-paired
@@ -398,8 +398,10 @@ class AdvancedRow():
 
                     ## Return Row with Corresponding Foreign Key's Value
                     try:
+                        if not fcolumn: q = "pk"
+                        else: q = f"{fcolumn}__eq"
                         with temp_row_factory(ftable,advancedrow_factory):
-                            result = ftable.quickselect(**{f"{fcolumn}__eq":self.row[name]})
+                            result = ftable.quickselect(**{q:self.row[name]})
                     except Exception as e:
                         #print(fcolumn, ftable)
                         raise e
@@ -449,6 +451,8 @@ class AdvancedRow_Factory():
         if not self.parent or not self._class:
             raise AttributeError("AdvancedRow Factory's parent or class is not set")
         return self._class(self.parent,cursor,row)
+    def __repr__(self):
+        return f"AdvancedRow_Factory({self._class.__name__}) Object"
 
 advancedrow_factory = AdvancedRow_Factory()
 
