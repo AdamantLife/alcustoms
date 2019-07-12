@@ -124,15 +124,15 @@ class ComplexCases(unittest.TestCase):
                 res = delimparser.tokenize(teststring, delimiter = delimiter, sep = sep)
                 self.assertEqual(res, result)
 
-class delimparser.tokenizerCase(unittest.TestCase):
+class TokenizerCase(unittest.TestCase):
     def test_basic(self):
         ## Default delimiter (for setting up test strings)
         delimiter = ":"
-        delimparser.tokenizer = delimparser.tokenizer(delimiter = delimiter)
+        tokenizer = delimparser.Tokenizer(delimiter = delimiter)
         for value,result in BASICTESTS:
             with self.subTest(value = value, result = result):
                 value = value.format(delimiter = delimiter)
-                res = delimparser.tokenizer(value)
+                res = tokenizer(value)
                 self.assertEqual(res, result)
 
 if __name__ == "__main__":

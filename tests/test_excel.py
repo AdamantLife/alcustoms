@@ -2,6 +2,7 @@
 from alcustoms import excel
 import openpyxl.worksheet.table
 ## Builtin
+import builtins
 import json
 import pathlib
 import types
@@ -73,7 +74,7 @@ class CoordinateTests(unittest.TestCase):
                     self.assertEqual(coord._column.value,result['column']['value'])
                     self.assertEqual(coord._column.absolute,result['column']['absolute'])
                 elif result['type'] == "exception":
-                    error = getattr(__builtins__,result['e_type'])
+                    error = getattr(builtins,result['e_type'])
 
                     ## Added length check to handle different length objects
                     ## (that are expected to fail further downstream)
