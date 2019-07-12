@@ -15,6 +15,7 @@ class VariousCase(unittest.TestCase):
         (   "2/4in"             , '0ft.- 0 1/2"'    , "1/2in"       , (0,0,1,2)     , .5    ),
         (   "3-1/5in"           , '0ft.- 3 1/5"'    , "3-1/5in"     , (0,3,1,5)     , 3.2   ),
         (   "0 1in"             , '0ft.- 1"'        , "1in"         , (0,1,0,0)     , 1     ),
+        (   "1 3/4in"           , '0ft.- 1 3/4"'    , "1-3/4in"     , (0,1,3,4)     , 1.75  ),
         ]
 
     BADTESTS = [1,3.125,None, False, lambda *x,**y: 1, unittest.main, unittest]
@@ -73,3 +74,6 @@ class VariousCase(unittest.TestCase):
                 for method in [measurement.measuretotuple,measurement.convertmeasurement,measurement.minimizemeasurement]:
                     with self.subTest(method = method):
                         self.assertEqual(input,method(input))
+
+if __name__ == "__main__":
+    unittest.main()

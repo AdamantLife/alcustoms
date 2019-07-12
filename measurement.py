@@ -1,7 +1,10 @@
 ## Builtin
+from collections import namedtuple
 import fractions
 import re
 
+## TODO: import decimal for use with Metric classes
+## TODO: Separate and Extend unittest
 
 def stripmatch(input,match):
     """ Strips the match from the front of the string and any additional whitespace at both ends (via strip()) """
@@ -125,6 +128,18 @@ def measuretotuple(input, _safe = True):
         raise e
     return tuple(0 if arg is None else int(arg) for arg in [feet,inches,numerator,denominator])
 
+def floattotuple(value,_safe = True):
+    """ Functions like measuretotuple, but accepts a float insteads """
+    try:
+        feet, rest = int(value // 12), value % 12
+        inches = int(rest)
+        fract = fractions.Fraction(rest - inches).limit_denominator(16)
+        output = (feet,inches,fract.numerator,fract.denominator)
+    except Exception as e:
+        if _safe: return value
+        raise e
+    return output
+
 def convertmeasurement(value, _safe = True):
     """ Checks if a string matches the Measurement Format used by the original program and converts it to a float of Inches if it does.
     
@@ -167,3 +182,233 @@ def minimizemeasurement(value, _safe = True):
     if not output:
         return "0ft"
     return output
+
+ImperialTuple = namedtuple("ImperialTuple", ["feet","inches","numerator","denominator"])
+
+class Measurement():
+    """ Base Measurement Class representation.
+        Provides access to module function appropriate for the given subclass
+    """
+    def __init__(self,value):
+        self._value = None
+        self.value = value
+    @property
+    def value(self):
+        return self._value
+    @value.setter
+    def value(self,value):
+        value = self.validate_measurement(value)
+        self._value = value
+
+    def __str__(self):
+        return self.tomeasurement()
+
+class Imperial(Measurement):
+    def __init__(self, value, limit = 16):
+        """ Creates a new Imperial Measurement Object.
+            value should be Tuple, Float, or String representing an Imperial Measurement.
+            limit is used to limit the denominator of fractions-of-an-inch.
+        """
+        super().__init__(value = value)
+        self.limit = limit
+
+    def validate_measurement(self,value):
+        if isinstance(value,tuple):
+            if len(tuple) != 4:
+                raise ValueError("Invalid Imperial Measurement Tuple")
+        elif isinstance(value,str):
+            try: value = measuretotuple(value, _safe = False)
+            except: raise ValueError("Invalid Imperial Measurement String")
+        elif isinstance(value,float):
+            value = floattotuple(value)
+        elif isinstance(value, Imperial):
+            value = value.totuple()
+        if not isinstance(value,tuple):
+            raise TypeError("Invalid Format for Imperial Measurment: should be a properly formatted String, a Float representing Inches, or a length-4 Tuple (feet,inches,numerator,denominator).")
+        return ImperialTuple(*value)
+
+    @property
+    def feet(self):
+        return self.value.feet
+    @property    
+    def inches(self):
+        return self.value.inches
+    @property
+    def fraction(self):
+        ## We arbitrarily enforce a minimum of 1 denominator as 0 is "impossible"
+        return fractions.Fraction(self.value.numerator,max(self.value.denominator,1)).limit_denominator(self.limit)
+
+    def totuple(self):
+        return tuple(self.value)
+
+    def tofloat(self):
+        return self.feet * 12 + self.inches + float(self.fraction)
+
+    def tomeasurement(self):
+        return f"{self.feet}ft. {self.inches}{'-'+str(self.fraction) if self.fraction else ''}"
+
+    def minimize(self):
+        return minimizemeasurement(self.value)
+
+    def __float__(self):
+        return self.tofloat()
+    def __add__(self,other):
+        if isinstance(other,Imperial):
+            return Imperial(self.tofloat() + other.tofloat(), limit = max(self.limit,other.limit))
+        if isinstance(other,(int,float)):
+            return self.tofloat() + other
+    def __sub__(self,other):
+        if isinstance(other,Imperial):
+            return Imperial(self.tofloat() - other.tofloat(), limit = max(self.limit,other.limit))
+        if isinstance(other,(int,float)):
+            return self.tofloat() - other
+    def __mul__(self,other):
+        if isinstance(other,(int,float)):
+            return self.tofloat()*other
+    def __rmul__(self,other):
+        if isinstance(other,(int,float)):
+            return self.tofloat()*other
+    def __truediv__(self,other):
+        if isinstance(other,(int,float)):
+            return self.tofloat() / other
+    def __rtruediv__(self,other):
+        ## Any reasonable reverse-division would assumably yield a brand new Unit/Class
+        raise TypeError(f"unsupported operand type(s) for /: '{other.__class__.__name__}' and '{self.__class__.__name__}'")
+    def __lt__(self,other):
+        if isinstance(other,Imperial):
+            return float(self) < float(other)
+    def __le__(self,other):
+        if isinstance(other,Imperial):
+            return float(self) <= float(other)
+    def __eq__(self,other):
+        def isinstance(other,Imperial):
+            return float(self) == float(other)
+
+
+
+MetricValues = {
+    "millimeter":{
+        "exponent":3,
+        "prefix":"m"
+        },
+    "centimeter":{
+        "exponent":2,
+        "prefix":"c"
+        },
+    "decimeter":{
+        "exponent":1,
+        "prefix":"d"
+        },
+    "meter":{
+        "exponent":0,
+        "prefix":""
+        },
+    "decameter":{
+        "exponent":-1,
+        "prefix":"da"
+        },
+    "hectometer":{
+        "exponent":-2,
+        "prefix":"h"
+        },
+    "kilometer":{
+        "exponent":-3,
+        "prefix":"k"
+        },
+    }
+
+## Just for the record, this is just to isolate v from the global scope, because I'm picky and lazy
+[v.__setitem__('exponential',10**v['exponent']) for v in MetricValues.values()]
+
+
+class MetricMeta(type):
+    def __new__(cls, clsname, bases, dct):
+        methods = []
+        newclass = super(MetricMeta,cls).__new__(cls, clsname, bases, dct)
+        if '_base' not in dct: dct['_base'] = 'meter'
+
+        for name,values in MetricValues.items():
+            @property
+            def func(self, values = values):
+                return self._Metric__tometers(self.value) * values['exponential']
+            setattr(newclass, name+"s", func)
+
+        return newclass
+
+class Metric(Measurement, metaclass = MetricMeta):
+    """ Base Class for Metric Measurements.
+        Integer and float arguements for the class are assumed to be in meters.
+        Subclasses treat integers and floats as the unit of their class name (i.e.- Millimeter(1234) represents a value of 1234mm).
+        All Metric classes can return a float of any other available metric unit; ergo, Millimeter(1234).meters == 1.234m.
+        Metric classes convert to meters for comparison, so Millimeters(1234) == Kilometers(.001234).
+    """
+    _base = "meter"
+    def validate_measurement(self,value):
+        if isinstance(value,str):
+            value = value.lower()
+            output = None
+            lookups = [(val['exponential'],val['prefix'],name) for name,val in MetricValues.items()]
+            while output is None and lookups:
+                exp,strg,name = lookups.pop(0)
+                research = re.search("^(?P<number>(\d+)(.\d+)?)"+strg+"m$",value)
+                if research:
+                    output = float(research.group("number"))
+                    self._base = name
+            if not output:
+                raise ValueError("Cannot determine Metric Measurement value")
+            value = output
+        if not isinstance(value,(float,int)):
+            raise ValueError("Invalid Metric Measurement value")
+
+        return float(value)
+
+    def __tometers(self,value):
+        return value / MetricValues[self._base]['exponential']
+
+    def __eq__(self,other):
+        if isinstance(other,Metric):
+            return self.meters == other.meters
+
+    def __int__(self): return int(self.meters)
+    def __float__(self): return float(self.meters)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__} Measurement ({self._base}): {self.value}"
+
+class Millimeters(Metric): _base = "millimeter"
+class Centimeters(Metric): _base = "centimeter"
+class Decimeters(Metric): _base = "decimeter"
+class Meters(Metric): _base = "meter"
+class Decameters(Metric): _base = "decameter"
+class Hectometers(Metric): _base = "hectometer"
+class Kilometers(Metric): _base = "kilometer"
+
+
+if __name__ == "__main__":
+    import unittest
+
+    class MetricCase(unittest.TestCase):
+        def test(self):
+            for (value,expected) in [ (Metric("1234m").meters, 1234),
+                                      (Metric("1234m").millimeters, 1234000),
+                                      (Metric("1234m"), Meters(1234)),
+                                      (Metric(123.4), Metric("1234dm")),
+                                      (Meters(1234), Decimeters(12340)),
+                                      (Meters(1234).meters, Decimeters(12340).meters)]:
+                with self.subTest(value = value, expected = expected):
+                    self.assertEqual(value,expected)
+
+    def demo():
+        while True:
+            value = input("Enter Amount\n>")
+            try:
+                metric = Metric(value)
+            except:
+                try: value = int(value)
+                except: print("Invalid Input, try again."); continue;
+            metric = Metric(value)
+            for name in MetricValues:
+                print(f">>> {name}: {getattr(metric,name+'s')}")
+
+    unittest.main()
+    #demo()

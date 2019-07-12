@@ -1,7 +1,9 @@
 ## Builtin
 import pathlib
+import queue
 import re
 import shutil
+import threading
 
 ## This Module
 from alcustoms import constants
@@ -107,6 +109,17 @@ class FileBackupManager():
         ## Cleanup will handle both successful and failed operations
         self.cleanup(exc_type)
         
+def _iterdir_re_args(pathobj,regexobj,test):
+    try:
+        pathobj = pathlib.Path(pathobj).resolve()
+        assert pathobj.is_dir() and pathobj.exists()
+    except:
+        raise ValueError("pathobj should be a string or a file-like object that can be accepted and resolved by pathlib to an existing directory.")
+    if isinstance(regexobj,str): regexobj = re.compile(regexobj)
+    elif not isinstance(regexobj, constants.SRE_Pattern): raise ValueError("iterdir_re requires string or SRE_Pattern for regex")
+    if not test: test = lambda x: True
+    return pathobj, regexobj, test
+
 def iterdir_re(pathobj, regexobj, test = pathlib.Path.is_file, as_string = False, recurse = False, access_errors = False):
     """ A generator to iterate through files in a directory which matches the given regex object
 
@@ -119,14 +132,8 @@ def iterdir_re(pathobj, regexobj, test = pathlib.Path.is_file, as_string = False
     If a directory raises a PermissionError and access_errors is True, that directory will be skipped. Otherwise,
     the Exception will be raised as normal (default).
     """
-    try:
-        pathobj = pathlib.Path(pathobj).resolve()
-        assert pathobj.is_dir() and pathobj.exists()
-    except:
-        raise ValueError("pathobj should be a string or a file-like object that can be accepted and resolved by pathlib to an existing directory.")
-    if isinstance(regexobj,str): regexobj = re.compile(regexobj)
-    elif not isinstance(regexobj, constants.SRE_Pattern): raise ValueError("iterdir_re requires string or SRE_Pattern for regex")
-    if not test: test = lambda x: True
+    pathobj, regexobj, test = _iterdir_re_args(pathobj, regexobj, test)
+
     def iterdir(path):
         try:
             for obj in path.iterdir():
@@ -170,6 +177,65 @@ def recurse_directory(directory,returnmethod="file", skip_unaccess = True):
         if not skip_unaccess: raise e
     for child in subs:
         yield from recurse_directory(child,returnmethod = returnmethod)
+
+def threaded_iterdir_re(pathobj, regexobj, *, test = pathlib.Path.is_file, as_string = False, recurse = False, access_errors = False, threads = 6):
+    """ Threaded implementation of alcustoms.filemodules.iterdir_re.
+        This method is not a generator, unlike normal iterdir_re. There is also no predictable order in which results are returned.
+        Accepts the same positional and keyword arguments as iterdir_re.
+        Also accepts the thread keyword argument, which should be a positive integer and dictates the number of threads to use.
+    """
+    pathobj, regexobj, test = _iterdir_re_args(pathobj, regexobj, test)
+    if not isinstance(threads, int):
+        raise TypeError(f"threads should be a positive integer: {threads}")
+    if threads <= 0:
+        raise ValueError(f"threads should be a positive integer: {threads}")
+
+    collectionQ = queue.Queue()
+    directoryQ = queue.Queue()
+    endsignal = threading.Event()
+    threadpool = []
+    def _iterdir(path):
+        try:
+            for child in path.iterdir():
+                if test(child):
+                    if as_string: collectionQ.put(str(child))
+                    else: collectionQ.put(child)
+                if recurse and child.is_dir(): directoryQ.put(child)
+        except PermissionError as e:
+            if not access_errors: raise e
+
+
+    def worker(endsignal,mysignal):
+        while not endsignal.is_set():
+            try:
+                path = directoryQ.get(timeout = 3)
+            except queue.Empty:
+                #printlock("Q EMPTY!",threading.currentThread().getName())
+                mysignal.set()
+                continue
+            mysignal.clear()
+            _iterdir(path)
+        #printlock(threading.currentThread().getName(), "stopping")
+
+    ## Setup
+    directoryQ.put(pathobj)
+    for thread in range(threads):
+        sign = threading.Event()
+        threadpool.append((sign,threading.Thread(target = worker, args = (endsignal, sign))))
+
+    ## Run
+    for (sign, thread) in threadpool:
+        thread.start()
+
+    while any(not sign.is_set() for (sign,thread) in threadpool):
+        #printlock([not sign.is_set() for (sign,thread) in threadpool])
+        time.sleep(3)
+
+    endsignal.set()
+    for (sign,thread) in threadpool:
+        thread.join()
+
+    return list(collectionQ.queue)
 
 def index_directory(directory, recurse = False):
     """ Creates a dictionary describing the current directory
