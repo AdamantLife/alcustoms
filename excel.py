@@ -473,7 +473,7 @@ class Range():
             end = Coordinate(end.row, end.column)
             raise ValueError(f"Subrange coordinates out of Range: R[{self.masterstart.row}]C[{self.masterstart.column}] : R[{self.masterend.row}]C[{self.masterend.column}] <> R[{start.row}]C[{start.column}] : R[{end.row}]C[{end.column}]")
 
-        return Range(self.worksheet,f"{start.column}{start.row}:{end.column}{end.row}")
+        return Range(self.worksheet,f"{start.column_letter}{start.row}:{end.column_letter}{end.row}")
         
     def __eq__(self,other):
         if isinstance(other,Range):

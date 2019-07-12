@@ -106,7 +106,15 @@ def appenderror(error,extrainfo):
 
 
 if __name__ == "__main__":
-    from alcustoms.tests import sqltests
-    with sqltests.TESTMANAGER as conn:
-        modules = [sqltests,]
-        runtestmodules(modules,conn=conn)
+    ## TODO: Sort this out
+    #from alcustoms.tests import sqltests
+    #with sqltests.TESTMANAGER as conn:
+    #    modules = [sqltests,]
+    #    runtestmodules(modules,conn=conn)
+
+    import unittest
+    import pathlib
+    path = pathlib.Path.cwd()
+    tests = unittest.TestLoader().discover(path)
+    #print(tests)
+    unittest.TextTestRunner().run(tests)

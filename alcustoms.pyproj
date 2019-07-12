@@ -146,21 +146,21 @@
     </Compile>
     <Compile Include="sql\__init__.py" />
     <Compile Include="subclasses.py" />
-    <Compile Include="tests\exceltests.py">
+    <Compile Include="tests\test_excel.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tests\graphql_querytests.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="tests\methodstests.py">
+    <Compile Include="tests\test_methods.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="tests\nestparser.py">
+    <Compile Include="tests\test_nestparser.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="sql\tests\test_sql.py" />
     <Compile Include="sql\tests\sql_newparsertest.py" />
-    <Compile Include="tests\subclasses.py">
+    <Compile Include="tests\test_subclasses.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tests\test_delimparser.py">
@@ -169,13 +169,13 @@
     <Compile Include="tests\test_measurment.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="tests\texttable.py">
+    <Compile Include="tests\test_texttable.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="tests\versiontests.py">
+    <Compile Include="tests\test_version.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="tests\web.py" />
+    <Compile Include="tests\test_web.py" />
     <Compile Include="tests\__init__.py" />
     <Compile Include="texttable.py">
       <SubType>Code</SubType>
