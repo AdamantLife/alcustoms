@@ -1,8 +1,9 @@
-requests
 bs4
-pillow
-openpyxl
-google
 flask
+google
 google-api-python-client
 matplotlib
+numpy
+openpyxl
+pillow
+requests

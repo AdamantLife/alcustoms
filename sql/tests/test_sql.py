@@ -1432,6 +1432,16 @@ class AdvancedRowCase(unittest.TestCase):
         row = table.selectall().first()
         self.assertEqual(row.pk, row.userid)
 
+    def test_drop(self):
+        """ Tests that the advancedrow can drop itself. """
+        self.connection.row_factory = objects.advancedrow_factory
+        row = self.connection.getadvancedtable("users").quickselect(pk = 1).first()
+        self.assertTrue(row)
+        row.drop()
+        newrow = self.connection.getadvancedtable("users").quickselect(pk = 1).first()
+        self.assertFalse(newrow)
+        self.assertNotEqual(row,newrow)
+
 class QueryResultCase(unittest.TestCase):
     """ Tests for QueryResult Object and AdvancedTable functions that are decorated by its decorator """
     def setUp(self):
