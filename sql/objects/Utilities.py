@@ -57,3 +57,38 @@ def temp_row_decorator(row_factory):
                 return func(*args,**kw)
         return inner
     return deco
+
+def generate_dropcolumn(table,*columns):
+    """ Generates a script to emulate the DROP COLUMN (which at the moment is not implemented in sqlite).
+   
+        Based on https://www.sqlite.org/faq.html#q11
+        table should be Table instance.
+        columns should be string names of columns in the table. Their existence is not enforced for flexibility.
+    """
+    from .Table import Table
+    if not isinstance(table, Table):
+        raise TypeError("generate_dropcolumn requires a Table instance")
+
+    constructor = table.to_constructor()
+    for column in columns:
+        if column in constructor.columns:
+            del constructor.columns[column]
+    ## This is the original table's creation without the columns
+    creation2 = constructor.definition
+
+    ## This is a temporary, intermediary table's creation
+    constructor.temporary = True
+    constructor.name = table.name + "__temporary__"
+    creation1 = constructor.definition
+
+    new_columns = ",".join(list(constructor.columns))
+
+    return f"""BEGIN TRANSACTION;
+{creation1}
+INSERT INTO {constructor.name} SELECT {new_columns} FROM {table.name};
+DROP TABLE {table.name};
+{creation2}
+INSERT INTO {table.name} SELECT {new_columns} FROM {constructor.name};
+DROP TABLE {constructor.name};
+COMMIT;
+"""

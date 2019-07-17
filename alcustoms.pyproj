@@ -126,9 +126,18 @@
     </Compile>
     <Compile Include="sql\objects\Table.py" />
     <Compile Include="sql\objects\Utilities.py" />
+    <Compile Include="sql\objects\versioning.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="sql\objects\View.py" />
     <Compile Include="sql\objects\__init__.py" />
     <Compile Include="sql\tests\objects\test_graphdb.py" />
+    <Compile Include="sql\tests\objects\test_utilities.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="sql\tests\objects\test_versioning.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="sql\tests\objects\__init__.py" />
     <Compile Include="tests\decorators.py">
       <SubType>Code</SubType>
