@@ -368,6 +368,13 @@ class AdvancedRow():
         self.cursor = cursor
         self.row = dict_factory(cursor,row)
 
+    def drop(self):
+        """ Drops the row from it's Table.
+       
+            The row will not commit the change automatically.
+        """
+        self.table.quickdelete(pk = self.pk)
+
     def __getattribute__(self, name):
         ## Don't hijack reserved names or specific, known attrs (saves a couple steps)
         if name.startswith("__") or name in ['table','cursor','row']:
