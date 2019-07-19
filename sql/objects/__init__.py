@@ -466,6 +466,27 @@ class AdvancedRow_Factory():
 
 advancedrow_factory = AdvancedRow_Factory()
 
+class Advanced_RowID(int):
+    """ A special integer class that can be used to automatically retrieve the AdvancedRow.
+   
+        Created specifically for AdvancedTable.addrow which would normally return the last_rowid
+        based on the cursor used by db.execute([Insert Statement]). The normal pattern otherwise
+        would be:
+            rowid = myadvtable.addrow(value = 1)
+            row = myadvtable.quickselect(pk = rowid)
+
+        With Advanced_RowID this can be simplified as:
+            row = myadvtable.addrow(value = 1).get()
+    """
+    def __new__(cls, value, table, *args, **kw):
+        if not isinstance(table, Table.AdvancedTable):
+            raise TypeError("Advanced_RowID's table should be an AdvancedTable")
+        o = super().__new__(cls, value, *args,**kw)
+        o.table = table
+        return o
+    def get(self):
+        return self.table.quickselect(pk = self).first()
+
 #########################################################################
 """                         DATABASE FUNCTIONS                        """
 #########################################################################
