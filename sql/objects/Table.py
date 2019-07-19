@@ -663,7 +663,7 @@ class AdvancedTable(Table):
         query = f"""INSERT INTO {self.fullname} ({columns}) VALUES ({replacementstring});"""
 
         cursor = self.database.execute(query,replacementdict)
-        return cursor.lastrowid
+        return objects.Advanced_RowID(cursor.lastrowid,self)
 
     def insert(self, *args, **kw):
         """ Alias for addrow """
@@ -846,6 +846,19 @@ class AdvancedTable(Table):
         selectstring = " AND ".join(selstrings)
 
         self.database.execute(f"""DELETE FROM {self.fullname} WHERE {selectstring};""",selreplacements)
+
+    def get(self, pk):
+        """ A convenience function for getting a single row by pk.
+
+            pk should be a valid pk value in the Table. A ValueError will be raised otherwise.
+
+            This function replaces the pattern of:
+                row = advtable.quickselect(pk = myrowid).first()
+                if not row: [Do things]
+        """
+        row = self.quickselect(pk = pk).first()
+        if not row: raise ValueError(f"Table {self.fullname} has no row: {pk}")
+        return row
 
     @objects.queryresult
     @objects.saverowfactory
