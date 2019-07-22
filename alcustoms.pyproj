@@ -172,7 +172,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="sql\tests\test_sql.py" />
-    <Compile Include="sql\tests\sql_newparsertest.py" />
+    <Compile Include="sql\tests\test_newparser.py" />
     <Compile Include="tests\test_subclasses.py">
       <SubType>Code</SubType>
     </Compile>

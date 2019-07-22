@@ -458,7 +458,7 @@ class Parser():
             elif name == "multilinecomment":
                 comment = objects.MultilineComment(d)
                 d1 = d
-                d = d.replace(str(comment),"")
+                d = d.replace(str(comment),"").strip()
                 if d == d1: raise RuntimeError("MultilineComment Replacement Failed")
                 if column: column.comments.append(comment)
                 else: self.obj._comments.append(comment)
@@ -471,6 +471,7 @@ class Parser():
                     ## This is a check to ensure that we remember to add logic for future tokens
                     raise SyntaxError(f"Undefined Token: {name}")
                 if not column or column._datatype is None:
+
                     identifier = objects.Identifier.parse(match.group(0))
                     d = d.replace(identifier.raw,"",1).strip()
                     if not column:

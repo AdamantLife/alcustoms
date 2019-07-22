@@ -689,7 +689,7 @@ class Comment():
         return f'{self.__class__.__name__} Object: "{self.comment}"'
 
 class MultilineComment():
-    REGEX = re.compile("\/\*(.*)\*\/",re.DOTALL)
+    REGEX = re.compile("\/\*(.*?)\*\/",re.DOTALL)
     def parse(comment):
         comment = comment.strip()
         if not comment.startswith("/*"):
