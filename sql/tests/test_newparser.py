@@ -1,4 +1,5 @@
-from alcustoms.sql import objects as sql, virtual
+from alcustoms import sql
+from alcustoms.sql import virtual
 from alcustoms.sql.newparser import Parser
 import unittest
 
@@ -25,7 +26,7 @@ class Parse2Case(unittest.TestCase):
         """ Tests some basic tables """
         for testtable in TESTTABLES():
             with self.subTest(testtable = testtable):
-                table = sql.Table(testtable['definition'], _parser =Parser)
+                table = sql.Table.Table(testtable['definition'], _parser =Parser)
                 for column in testtable['columns']:
                     with self.subTest(column = column, table = table):
                         self.assertIn(column['name'],table.columns)
@@ -97,7 +98,7 @@ class Parse2Case(unittest.TestCase):
                                                 ("""CREATE TABLE blah (name TEXT,);""", ValueError, 'Near "\)" syntax'), ## Near Parentheses
                                                 ]:
             with self.subTest(definition = definition, errortype = errortype, errorre = errorre):
-                self.assertRaisesRegex(errortype,errorre,sql.Table,definition,_parser = Parser)
+                self.assertRaisesRegex(errortype,errorre,sql.Table.Table,definition,_parser = Parser)
 
     def test_basic_parsecolumn(self):
         """ A basic test for Parser.parse_column """
@@ -280,7 +281,7 @@ class TableCase(unittest.TestCase):
 
     def test_correcttable(self):
         """ Tests that the Parser actually matched """
-        self.assertIsInstance(self.parser.obj,sql.Table)
+        self.assertIsInstance(self.parser.obj,sql.Table.Table)
 
     def test_temporary(self):
         """ Tests that the regex found the temporary table tag """
@@ -349,14 +350,15 @@ class SimpleSelectStatementCase(unittest.TestCase):
         parser = Parser(definition)
         self.assertEqual(parser.obj.mode,"DISTINCT")
 
-    def test_resultcolumns_simple(self):
-        """ Tests that simple identifiers can be parsed as result columns """
-        definition= """
-        SELECT rowid,*,[table].*
-        FROM testtable
-        LEFT JOIN table ON table.x = testtable.rowid;"""
-        parser = Parser(definition)
-        self.assertEqual(parser.obj.columns.values(),["rowid","*","table.*"])
+    ## TODO: Select statemnets
+    #def test_resultcolumns_simple(self):
+    #    """ Tests that simple identifiers can be parsed as result columns """
+    #    definition= """
+    #    SELECT rowid,*,[table].*
+    #    FROM testtable
+    #    LEFT JOIN table ON table.x = testtable.rowid;"""
+    #    parser = Parser(definition)
+    #    self.assertEqual(parser.obj.columns.values(),["rowid","*","table.*"])
 
 class VirtualTableCase(unittest.TestCase):
     """ Test Case for various Virtual Tables """
@@ -423,7 +425,22 @@ class VirtualTableCase(unittest.TestCase):
         self.assertEqual(obj,advobj)
         self.assertEqual(obj2,advobj)
 
-
+class SpecificCase(unittest.TestCase):
+    """ A case to test specific bugs and fixes """
+    def test_multiple_multiline_comments(self):
+        """ The parse previously consumed multiline comments greedily which would result in
+            all text between two (or more) multiline comments getting captured. Switched to
+            non-greedy to fix.
+            
+        """
+        table = """CREATE TABLE a(
+        column1, /* A multiline
+        comment */
+        column2 /* The previous column would be captured when these two comments were merged */
+        );"""
+        parsedtable = Parser(table).obj
+        self.assertIn("column1",parsedtable.columns) ## This would always pass
+        self.assertIn("column2",parsedtable.columns) ## This would fail with the bug
 
 if __name__ == "__main__":
     unittest.main()
