@@ -1,0 +1,1 @@
+from systemtray import SysTrayIcon
