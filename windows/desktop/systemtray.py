@@ -1,7 +1,10 @@
 """ This module is adapted from http://www.brunningonline.net/simon/blog/archives/SysTrayIcon.py.html """
 
+## Builtin
 import os
 import sys
+import threading
+## Third Party
 import win32api
 import win32con
 import win32gui_struct
@@ -9,6 +12,7 @@ try:
     import winxpgui as win32gui
 except ImportError:
     import win32gui
+
 
 __all__ = ["MenuItem","SubMenuItem","SysTrayIcon"]
 
@@ -79,7 +83,7 @@ class SysTrayIcon():
     FIRST_ID = 1023
     
     def __init__(self,
-                 icon,
+                 icon = None,
                  hover_text = "",
                  menu_options = None,
                  on_quit=None,
@@ -94,23 +98,33 @@ class SysTrayIcon():
                 represent MenuItems or SubMenuItems: MenuItem iterables should be formatted
                 ("Label", "icon.ico", callback); SubMenuItem iterables should be formatted
                 ("Label","icon.ico",[... nested MenuItems and/or SubMenuItems]).
-            on_quit should be a function to be called when the SysTraycon's QUIT command is executed.
+            on_quit should be a function or list of functions to be called when the SysTraycon's QUIT command is executed.
             quit_word should be a label to use for the SysTrayIcon's Quit MenuItem (defaults to "Quit").
             default_menu_index is the index of the MenuItem or SubMenuItem to invoke when the icon is doubleclicked.
                 Note that indices are determined recursively for SubMenuItem's submenuitems first, before indexing the SubMenuItem.
         """
         
         self._next_action_id = self.FIRST_ID
+        if icon is None: icon = ""
         self.icon = icon
         self.hover_text = hover_text
+
+        if on_quit is None: on_quit = list()
+        try: on_quit = list(on_quit)
+        except:
+            on_quit = [on_quit,]
+        if not all(callable(q) for q in on_quit):
+            raise TypeError("on_quit callbacks should be functions.")
         self.on_quit = on_quit
+
         if quit_word:
             if not isinstance(quit_word,str): raise TypeError("quit_word requires a string")
             if not quit_word.strip(): raise ValueError("quit_word must contain non-whitespace characters")
         else:
             quit_word = "Quit"
         
-        menu_options = menu_options + ((quit_word, None, self.QUIT),)
+        if menu_options is None: menu_options = []
+        menu_options = list(menu_options) + [(quit_word, None, self.QUIT),]
         ## menu is the physical layout (nested menu)
         self.menu = list()
         ## action_lookup is used when the systray returns an action id (flat menu)
@@ -127,8 +141,20 @@ class SysTrayIcon():
 
         self.notify_icon_data = None
         self.refresh_icon()
+        self.running = False
+
+    def register_on_quit(self,func):
+        """ Function to add on_quit callbacks post-hoc """
+        if not callable(func):
+            raise TypeError("on_quit callbacks should be functions.")
+        self.on_quit.append(func)
         
-        win32gui.PumpMessages()
+    def mainloop(self):
+        self.running = True
+        while self.running:
+            win32gui.PumpWaitingMessages()
+        if self.hwnd:
+            self.QUIT()
 
     def command(self, hwnd, msg, wparam, lparam):
         """ Parses the event for the action_id and then executes it"""
@@ -231,7 +257,37 @@ class SysTrayIcon():
                           win32gui.NIF_ICON | win32gui.NIF_MESSAGE | win32gui.NIF_TIP,
                           win32con.WM_USER+20,
                           hicon,
-                          self.hover_text)
+                          str(self.hover_text))
+        win32gui.Shell_NotifyIcon(message, self.notify_icon_data)
+
+    def show_notification(self, text, title = "", timeout = 1):
+        """ Refereshes/Displays the icon image """
+        # Try and find a custom icon
+        hinst = win32gui.GetModuleHandle(None)
+        if os.path.isfile(self.icon):
+            icon_flags = win32con.LR_LOADFROMFILE | win32con.LR_DEFAULTSIZE
+            hicon = win32gui.LoadImage(hinst,
+                                       self.icon,
+                                       win32con.IMAGE_ICON,
+                                       0,
+                                       0,
+                                       icon_flags)
+        else:
+            print("Can't find icon file - using default.")
+            hicon = win32gui.LoadIcon(0, win32con.IDI_APPLICATION)
+
+        if self.notify_icon_data: message = win32gui.NIM_MODIFY
+        else: message = win32gui.NIM_ADD
+        self.notify_icon_data = (self.hwnd,
+                          0,
+                          win32gui.NIF_INFO,
+                          win32con.WM_USER+20,
+                          hicon,
+                          str(self.hover_text),
+                          text,
+                          timeout,
+                          title
+                          )
         win32gui.Shell_NotifyIcon(message, self.notify_icon_data)
 
     def restart(self, hwnd, msg, wparam, lparam):
@@ -240,10 +296,14 @@ class SysTrayIcon():
 
     def destroy(self, hwnd, msg, wparam, lparam):
         """ Callback for when the hwnd is destroyed """
-        if self.on_quit: self.on_quit(self)
+        if self.on_quit:
+            for func in self.on_quit:
+                func(self)
         nid = (self.hwnd, 0)
         win32gui.Shell_NotifyIcon(win32gui.NIM_DELETE, nid)
         win32gui.PostQuitMessage(0) # Terminate the app.
+        self.hwnd = None
+        self.running = False
 
     def notify(self, hwnd, msg, wparam, lparam):
         """ Callback for icon events """
@@ -292,6 +352,26 @@ class SysTrayIcon():
             else: continue
             win32gui.InsertMenuItem(menu, 0, 1, item)
             
+class SysTrayIconThread(threading.Thread):
+    def __init__(self, *args, daemon = None, **kw):
+        self.args, self.kw = args,kw
+        self.icon = None
+        super().__init__(daemon = daemon)
+
+    def run(self):
+        self.icon = SysTrayIcon(*self.args, **self.kw)
+        def clearself(*args,**kw):
+            self.icon = None
+        self.icon.register_on_quit(clearself)
+        self.icon.mainloop()
+
+    def QUIT(self):
+        if self.icon:
+            self.icon.running = False
+        ## Should already be None if self.icon.QUIT is called
+        self.icon = None
+        
+
 if __name__ == '__main__':
     def test_systrayicon():
         """ Taken from http://www.brunningonline.net/simon/blog/archives/SysTrayIcon.py.html """
@@ -303,15 +383,44 @@ if __name__ == '__main__':
         hover_text = "SysTrayIcon.py Demo"
         def hello(sysTrayIcon): print("Hello World.")
         def simon(sysTrayIcon): print("Hello Simon.")
+        def balloon(sysTrayIcon):
+            sysTrayIcon.show_notification("Hello Notification")
         def switch_icon(sysTrayIcon):
             sysTrayIcon.icon = next(icons)
             sysTrayIcon.refresh_icon()
-        menu_options = (('Say Hello', next(icons), hello),
+        menu_options = [('Say Hello', next(icons), hello),
+                        ('Notification', None, balloon),
                         ('Switch Icon', None, switch_icon),
                         ('A sub-menu', next(icons), (('Say Hello to Simon', next(icons), simon),
                                                       ('Switch Icon', next(icons), switch_icon),
                                                      ))
-                       )
+                       ]
         def bye(sysTrayIcon): print('Bye, then.')
     
-        SysTrayIcon(next(icons), hover_text, menu_options, on_quit=bye, quit_word = "Exit", default_menu_index=1)
+        icon = SysTrayIcon(next(icons), hover_text, menu_options, on_quit=bye, quit_word = "Exit", default_menu_index=1)
+        print("start")
+        icon.mainloop()
+        print("stop")
+
+    def test_threaded():
+        import time
+        def balloon(sysTrayIcon):
+            sysTrayIcon.show_notification("Hello Notification")
+        menu_options = [("Say Hello",None,balloon),]
+        thread = SysTrayIconThread(menu_options = menu_options)
+        print("starting thread")
+        thread.start()
+        ## wait for thread to boot up
+        while not thread.icon: pass
+        ## Wait for Exception (i.e.- KeyboardInterrupt) or for the Quit Command to be called
+        try:
+            while thread.icon: pass
+        except: pass
+        if thread.icon:
+            thread.QUIT()
+        print("joining")
+        thread.join()
+        print("done")
+
+    test_systrayicon()
+    #test_threaded()

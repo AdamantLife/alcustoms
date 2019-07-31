@@ -13,12 +13,14 @@ def register_named_proxyport(*names, targetip = "127.0.0.1", targetport = 8000, 
     
         This function requires Administrative rights. If not available, a RuntimeError will be raised.
 
-        names is one or more names that will be resolved to the given target.
+        names is one or more names that will be resolved to the given target. If those names are already
+        registered, a ValueError is raised.
         targetip is the ip that should be redirected to. The default is "127.0.0.1" (localhost).
         targetport is the port on that ip to target. The default port is 8000.
         proxyaddress is an address that netsh should listen on. It should be an address that is not
         already being monitored. The "netstat -a -n -p TCP" console command can be used to check the
-        address. Default value is "127.65.43.21".
+        address. Default value is "127.65.43.21". If this address is already registered, a ValueError
+        will be raised.
         proxyport is "80" by default and should be kept that way for use with webbrowsers.
     """
     if not is_admin():
@@ -35,6 +37,10 @@ def register_named_proxyport(*names, targetip = "127.0.0.1", targetport = 8000, 
     subprocess.run(cmds)
 
     hosts = python_hosts.Hosts()
+    if hosts.exists(address == proxyaddress):
+        raise ValueError("Provided proxy address is already in use")
+    if hosts.exists(names = names):
+        raise ValueError("Provided names are already registered")
     hosts.add([entry,])
     hosts.write()
 
