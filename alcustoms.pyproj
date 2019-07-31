@@ -145,6 +145,9 @@
     <Compile Include="tests\decorators.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="tests\test_alcustoms.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="tests\test_complextags.py">
       <SubType>Code</SubType>
     </Compile>
@@ -189,6 +192,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tests\test_web.py" />
+    <Compile Include="tests\test_windows.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="tests\__init__.py" />
     <Compile Include="texttable.py">
       <SubType>Code</SubType>
@@ -216,6 +222,18 @@
     <Compile Include="tkinter\__init__.py" />
     <Compile Include="trig.py" />
     <Compile Include="web.py" />
+    <Compile Include="windows\desktop\systemtray.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="windows\desktop\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="windows\networking.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="windows\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="winregistry.py">
       <SubType>Code</SubType>
     </Compile>
@@ -225,6 +243,7 @@
     <Folder Include="gaming" />
     <Folder Include="gaming\dice" />
     <Folder Include="gtk" />
+    <Folder Include="windows\" />
     <Folder Include="NOSql\" />
     <Folder Include="NOSql\tests\" />
     <Folder Include="Programs\" />
@@ -237,6 +256,7 @@
     <Folder Include="tkinter" />
     <Folder Include="tkinter\images" />
     <Folder Include="tkinter\to convert" />
+    <Folder Include="windows\desktop\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>

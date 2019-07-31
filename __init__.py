@@ -53,6 +53,55 @@ class Flag():
     def __repr__(self):
         return f"{self.__class__.__name__}: {self.value}"
 
+class IntegerPointer(Flag):
+    """ A Flag subclass which is used to track an integer value.
+   
+        Whenever the value is set or modified, it will be cast as an Integer. If this is not possible, a ValueError will be raised.
+        Adds .increment and .decrement functions which default to +1 and -1, respectively.
+        IntegerPointers can be cast to an Integer and compares to Integers based on its value.
+    """
+    def __init__(self, value = 0, **kw):
+        self._value = 0
+        super().__init__(value = value, **kw)
+    @property
+    def value(self):
+        return self._value
+    @value.setter
+    def value(self,value):
+        try: value = int(value)
+        except: raise ValueError(f"Invalid value for {self.__class__.__name__}")
+        self._value = value
+    def increment(self, value = 1):
+        try: value = int(value)
+        except: raise ValueError(f"Invalid increment value for {self.__class__.__name__}")
+        if value < 1: raise ValueError(f"{self.__class__.__name__}.increment should be greater than 0")
+        self.value += value
+    def decrement(self, value = -1):
+        try: value = int(value)
+        except: raise ValueError(f"Invalid decrement value for {self.__class__.__name__}")
+        if value > -1: raise ValueError(f"{self.__class__.__name__}.decrement should be less than 0")
+        self.value += value
+    def __int__(self):
+        return self.value
+    def __lt__(self,other):
+        try: return self.value < other
+        except: pass
+    def __le__(self,other):
+        try: return self.value <= other
+        except: pass
+    def __eq__(self,other):
+        try: return self.value == other
+        except: pass
+    def __ne__(self,other):
+        try: return self.value != other
+        except: pass
+    def __gt__(self,other):
+        try: return self.value > other
+        except: pass
+    def __ge__(self,other):
+        try: return self.value >= other
+        except: pass
+
 class ThreadController(threading.Thread):
     '''An thread that can check if it should start, continue, or conclude work via an alivemethod,
     with additional success, fail, and cleanup targets,and the option to fail silently (set graceful as True).
