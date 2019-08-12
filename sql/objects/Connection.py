@@ -74,13 +74,18 @@ class Database(Connection):
     the original file as a pathlib.Path object, a number of utility functions, and integration
     with other classes in this module.
     """
-    def __init__(self, file, check_same_thread = False, timeout = 10, _parser = None, row_factory = None, **kw):
+    def __init__(self, file, check_same_thread = False, timeout = 10, _parser = None, row_factory = None, table_constructor = None, **kw):
         """ Initializes a new Database object.
 
         check_same_thread is defaulted to False.
         The default for timeout is 10.
         If the Database can resolve the filepath of file, it will store the file as a pathlib.Path
         object. Otherwise, file is stored as supplied.
+        row_factory is a class or function that can be used as the row_factory for database queries.
+        table_constructor is used to initiliaze AdvancedTables. If table_cosntructor is a dict, its keys should be tablenames and
+        its values should be AdvancedTable subclasses. Otherwise, it should be a callable which accepts the tablename as a string
+        argument and returns an AdvancedTable subclass. If table_constructor is a dict and tablename is missing, AdvancedTable will
+        be used as default.
         """
         super().__init__(str(file), check_same_thread=check_same_thread, timeout=timeout,**kw)
         if _parser is None: _parser = objects.PARSER
@@ -94,6 +99,19 @@ class Database(Connection):
 
         if row_factory:
             self.row_factory = row_factory
+        self._table_constructor = None
+        if table_constructor is None: table_constructor = dict()
+        self.table_constructor = table_constructor
+
+    @property
+    def table_constructor(self):
+        return self._table_constructor
+    @table_constructor.setter
+    def table_constructor(self,table_constructor):
+        if isinstance(table_constructor,dict): table_constructor = lambda table, table_constructor = table_constructor: table_constructor.get(table, Table.AdvancedTable)
+        if not callable(table_constructor):
+            raise TypeError("table_constructor should be a dict or callable")
+        self._table_constructor = table_constructor
 
     def execute(self,*args,**kw):
         ## For when sql is executed manually (bypassing AdvancedTable)
@@ -202,12 +220,16 @@ class Database(Connection):
 
     @update_row_factory
     def getadvancedtable(self,tablename):
-        """ Returns an AdvancedTable Object representing the table of tablename.
+        """ Returns an AdvancedTable (or a Subclass) Object representing the table of tablename.
 
         tablename should be the string name of an existing table (including schema name for attached tables).
         Raises a ValueError if the table does not exist.
+        The return type is based on self.table_constructor.
         """
-        table = self.gettable(tablename).to_advancedtable()
+        tableclass = self.table_constructor(tablename)
+        if not issubclass(tableclass, Table.AdvancedTable):
+            raise TypeError(f"Invalid Table Constructor: requires AdvancedTable subclass, {tableclass} received")
+        table = self.gettable(tablename).to_advancedtable(self, tableclass)
         return table
 
     def gettablestats(self,tablename):

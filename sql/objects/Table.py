@@ -393,12 +393,15 @@ class Table():
         return TableConstructor(name = self.name, columns = self.columns, tableconstraints = self.tableconstraints,
                          temporary = self.istemporary, existsok = self.existsok, schema = self.schema, norowid = self.norowid)
 
-    def to_advancedtable(self, database = None):
+    def to_advancedtable(self, database = None, tableclass = None):
         """ Returns an AdvancedTable instance representation of the Table.
 
         If this instance's database attribute is not a Database-type object, one is required to use this method.
         """
-        return AdvancedTable.from_table(self,database = database)
+        if tableclass is None: tableclass = AdvancedTable
+        if not issubclass(tableclass,AdvancedTable):
+            raise TypeError("Invalid tableclass for to_advancedtable: should be AdvancedTable subclass- {tableclass} received")
+        return tableclass.from_table(self,database = database)
 
     def copy_table(self):
         other = self.__class__(self.definition,_parser = False)
