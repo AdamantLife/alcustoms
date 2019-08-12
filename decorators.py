@@ -56,32 +56,95 @@ def print_tracer(events = None,callback = None):
         return inner
     return decorator
 
-def batchable(self=False,LIMIT = 1000):
-    """ Decorator Factory for Batching Function calls
+def batchable(arg, limit = 100, callback = None):
+    """ Decorator Factory for Batching Function calls with variable args.
 
-    Returns the actual decorator that should be used on the desired function.
-    self indicates whether the first argument of the function should not be
-    counted for batching (because it is self).
-    LIMIT is the maximum number of args per call to the decorated function.
+    arg should be the name of the variable-length argument to be batched.
+    If arg is not an argument of the decorated function, a TypeError is raised.
+    If arg is not a variable-length argument, a ValueErroris raised.
+    limit is the maximum number of args per call to the decorated function.
+    Returns a decorator to be used on the function.
+
+    The decorator returns the collated return of all arguments.
+    If callback is provided, it will be called by the decorator with the result
+    as its only argument: the result of the callback will then be returned instead.
+
+    Example Usage:
+
+    @batchable("numbers", limit = 4, callback = lambda results: sum(results, []) )
+    def limited_function(exp, *numbers, **kwargs):
+        if len(numbers) > 4: raise RuntimeError("I can't handle more than 4 args")
+        return list(map(lambda x: x**exp, numbers))
+
+    limited_function(2, 1,2,3,4,5,6,7)
+    >> [ 1, 4, 9, 16, 25, 36, 49 ]
     """
-    _self = self
-    del self
     def actualdecorator(func):
-        def decor(*args,**kw):
-            if _self:
-                self,args = args[0],args[1:]
-            if len(args) <= LIMIT :
-                if _self: args = [self,]+list(args)
-                return func(*args,**kw)
-            collate = []
-            batches = [args[i:i+LIMIT] for i in range(0, len(args), LIMIT)]
-            for batch in batches:
-                if _self: batch = [self,]+list(batch)
-                result = func(*batch,**kw)
-                if len(result) == 1: collate.append(result)
-                else: collate.extend(result)
-            return collate
-        return decor
+        sig = inspect.signature(func)
+        if arg not in sig.parameters:
+            raise TypeError(f"{func} got an unexpected keyword argument '{arg}'")
+        if sig.parameters[arg].kind != inspect.Parameter.VAR_POSITIONAL:
+            raise ValueError(f"{arg} must be variable argument")
+        @functools.wraps(func)
+        def inner(*args,**kw):
+            ba = sig.bind(*args,**kw)
+            vals = list(ba.arguments[arg])
+            results = []
+            while vals:
+                vargs, vals = vals[:limit],vals[limit:]
+                ba.arguments[arg] = vargs
+                results.append(func(*ba.args, **ba.kwargs))
+            if callback:
+                return callback(results)
+            return results
+        return inner
+    return actualdecorator
+    
+
+def batchable_generator(arg, limit = 100):
+    """ A generator version of batchable which tracks the most recent args used.
+
+        arg and limit are identical to batchable.
+        batchable_generator does not accept a callback function for results.
+
+        On each iteration, yields the result for the current batch and stores the batch
+        as the "_lastargs" attribute on the function.
+        This function is preferable when it is not necessary to execute all arguments.
+
+        Example Usage:
+        
+        @batchable_generator("values", limit = 1)
+        def my_sorter(*values):
+            total = 0
+            for (value,flag) in values:
+                if flag: total+=int(value)
+            return total
+
+        results = []
+        inputvalues = [ (0,1), (1,0), (3,0), (6,1), (10,1), ("Foobar",1), (555, 0) ]
+        try:
+            for result in my_sorter( *inputvalues ): results.append(result)
+        except: pass
+
+        print(sum(results))
+        >> 16
+    """
+    def actualdecorator(func):
+        sig = inspect.signature(func)
+        if arg not in sig.parameters:
+            raise TypeError(f"{func} got an unexpected keyword argument '{arg}'")
+        if sig.parameters[arg].kind != inspect.Parameter.VAR_POSITIONAL:
+            raise ValueError(f"{arg} must be variable argument")
+        @functools.wraps(func)
+        def inner(*args,**kw):
+            ba = sig.bind(*args,**kw)
+            vals = list(ba.arguments[arg])
+            while vals:
+                vargs, vals = vals[:limit],vals[limit:]
+                ba.arguments[arg] = vargs
+                inner._lastargs = vargs
+                yield func(*ba.args, **ba.kwargs)
+        return inner
     return actualdecorator
 
 def one_in_one_out(self=False):

@@ -4,9 +4,72 @@ import unittest
 from alcustoms import decorators
 
 
+class BatchableCase(unittest.TestCase):
+    """ Tests the batchable decorator """
+    def test_basic(self):
+        """ Baseline tests of the decorator """
+        @decorators.batchable("numbers", limit = 4)
+        def myfunc(*numbers):
+            if len(numbers) > 4:
+                raise ValueError()
+            return list(numbers)
+
+        result = myfunc(1,2,3,4)
+        self.assertEqual(result,[[1,2,3,4],])
+        result = myfunc(1,2,3,4,5,6,7)
+        self.assertEqual(result, [ [1,2,3,4],[5,6,7]])
+
+    def test_callback(self):
+        """ Tests that the callback function is called """
+        @decorators.batchable("numbers", limit = 4, callback = lambda result: sum(result,[]))
+        def myfunc(*numbers):
+            if len(numbers) > 4:
+                raise ValueError()
+            return list(numbers)
+
+        result = myfunc(1,2,3,4)
+        self.assertEqual(result,[1,2,3,4])
+        result = myfunc(1,2,3,4,5,6,7)
+        self.assertEqual(result, [ 1,2,3,4, 5,6,7])
+
+    def test_batchable_generator_example(self):
+        """ Tests the Example Usage of the batchable_generator function """
+        @decorators.batchable_generator("values", limit = 1)
+        def my_sorter(*values):
+            total = 0
+            for (value,flag) in values:
+                if flag: total+=int(value)
+            return total
+
+        results = []
+        inputvalues = [ (0,1), (1,0), (3,0), (6,1), (10,1), ("Foobar",1), (555, 0) ]
+        try:
+            for result in my_sorter( *inputvalues ): results.append(result)
+        except: pass
+
+        self.assertEqual(sum(results),16)
+
+    def test_batchable_generator_lastargs(self):
+        """ Tests that batchable_generator saves the last args passed to the function """
+        @decorators.batchable_generator("values", limit = 4)
+        def my_func(*values):
+            return sum(values)
+
+        ## No errors
+        inputvalues = [1,2,3,4,5]
+        for result in my_func(*inputvalues): pass
+        self.assertEqual(my_func._lastargs,[5,])
+
+        ## With Errors
+        inputvalues = [1,2,3,4,5,6,7,8,9,"Foobar"]
+        def test():
+            for result in my_func(*inputvalues): pass
+        self.assertRaises(TypeError,test)
+        self.assertEqual(my_func._lastargs,[9,"Foobar"])
+        
 SignatureDecorator = decorators.SignatureDecorator
 dynamic_defaults = decorators.dynamic_defaults
-class SignatureDecoratorTest(unittest.TestCase):
+class SignatureDecoratorCase(unittest.TestCase):
     """ Unittests for SignatureDecorator and related functions """
 
     def setUp(self):
