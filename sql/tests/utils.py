@@ -103,3 +103,8 @@ class TestObject():
     def __eq__(self, other):
         if isinstance(other,TestObject):
             return all(getattr(self,k) == getattr(other,k) for k in ["name","value","forgnid","rowid"])
+
+TESTVIEWSQL = """CREATE VIEW testview AS
+SELECT name
+FROM testtable
+ORDER BY name;"""
