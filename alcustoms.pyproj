@@ -145,7 +145,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="sql\tests\objects\__init__.py" />
-    <Compile Include="tests\decorators.py">
+    <Compile Include="tests\test_decorators.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tests\test_alcustoms.py">
