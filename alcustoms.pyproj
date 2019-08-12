@@ -224,7 +224,18 @@
     <Compile Include="tkinter\widgets.py" />
     <Compile Include="tkinter\__init__.py" />
     <Compile Include="trig.py" />
-    <Compile Include="web.py" />
+    <Compile Include="web\bs4.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="web\requests.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="web\urllib.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="web\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="windows\desktop\systemtray.py">
       <SubType>Code</SubType>
     </Compile>
@@ -246,6 +257,7 @@
     <Folder Include="gaming" />
     <Folder Include="gaming\dice" />
     <Folder Include="gtk" />
+    <Folder Include="web\" />
     <Folder Include="windows\" />
     <Folder Include="NOSql\" />
     <Folder Include="NOSql\tests\" />
