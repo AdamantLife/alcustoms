@@ -1,7 +1,7 @@
 ## Testing Module
 import unittest
 ## Module to Test
-from alcustoms import web
+from alcustoms.web import bs4 as web_bs4
 
 ## Third Party
 import bs4
@@ -19,9 +19,9 @@ class BS4Case(unittest.TestCase):
         return super().setUp()
 
     def test_find_with_child(self):
-        """ Tests basic functionality of bs4_find_with_child """
+        """ Tests basic functionality of find_with_child """
         soup = findwith()
-        awesomespanfinder = web.bs4_find_with_child("span",findtag = "p",class_="awesome")
+        awesomespanfinder = web_bs4.find_with_child("span",findtag = "p",class_="awesome")
         result = soup(awesomespanfinder)
         self.assertListEqual([str(res) for res in result],['<p>that will find <span class="awesome">this awesome span</span> but <span>no other</span></p>','<p><span class="awesome">Pretty groovey, ey?</span></p>'])
 
@@ -29,17 +29,17 @@ class BS4Case(unittest.TestCase):
         soup = testtable()
         ## Simple 1: Has explicit thead and tbody
         table = soup.find("table",id="simple1")
-        result = web.bs4_table_to_dicts(table)
+        result = web_bs4.table_to_dicts(table)
         self.assertEqual(result,[{"Col 1": "Hello", "Col 2":"World", "Col 3": "Hello World"},
                                  {"Col 1": "Foo", "Col 2":"bar", "Col 3": "Foobar"}])
         ## Simple 2: Has explicit tbody only
         table = soup.find("table",id="simple2")
-        result = web.bs4_table_to_dicts(table)
+        result = web_bs4.table_to_dicts(table)
         self.assertEqual(result,[{"Col A":"Bizz", "Col B":"Bazz", "Col C": "Bizzbazz"},
                                  {"Col A":"Jan", "Col B":"Ken", "Col C":"Pon"}])
         ## Simple 3: Has explicit thead only
         table = soup.find("table",id="simple3")
-        result = web.bs4_table_to_dicts(table)
+        result = web_bs4.table_to_dicts(table)
         self.assertEqual(result,[{"Creature":"Fish","Count":"One","Color":"Red"},
                                  {"Creature":"Fish","Count":"Two", "Color":"Blue"}])
 
@@ -59,7 +59,7 @@ class BS4Case(unittest.TestCase):
             ## "4 Cols: Part 1: A", "4 Cols: Part 1: B", "4 Cols: Part 2: C",
             ## "4 Cols: Part 2: D", "2 Cols: E", "2 Cols: F", "1 Col"
             table = soup.find("table", id="complex1")
-            result = web.bs4_table_to_dicts(table)
+            result = web_bs4.table_to_dicts(table)
             self.assertEqual(result,[{"4 Cols: Part 1: A": "1", "4 Cols: Part 1: B":"2", "4 Cols: Part 2: C":"3", "4 Cols: Part 2: D": "4", "2 Cols: E": "5", "2 Cols: F": "6", "1 Col":"7"},
                                      {"4 Cols: Part 1: A": "11", "4 Cols: Part 1: B":"12", "4 Cols: Part 2: C":"13", "4 Cols: Part 2: D": "14", "2 Cols: E": "15", "2 Cols: F": "16", "1 Col":"17"}])
 
@@ -75,7 +75,7 @@ class BS4Case(unittest.TestCase):
             ## "1 Col-1", "2 Col: A", "2 Col: B", "1 Col-2", "Double Col"
             ## "Double Col" key should have a list value
             table = soup.find("table",id="complex2")
-            result = web.bs4_table_to_dicts(table)
+            result = web_bs4.table_to_dicts(table)
             self.assertEqual(result,
                              [{"1 Col-1": "1", "2 Col: A": "2", "2 Col: B": "3", "1 Col-2":"4", "Double Col": ["5","6"]},
                               {"1 Col-1": "11", "2 Col: A": "12", "2 Col: B": "13", "1 Col-2":"14", "Double Col": ["15","16"]}
@@ -95,7 +95,7 @@ class BS4Case(unittest.TestCase):
             ##  "3 Cols: AB: A", "3 Cols: AB: B", "3 Cols: C", "1 Cols",
             ##  "Odd Column: E"
             table = soup.find("table", id="complex3")
-            result = web.bs4_table_to_dicts(table)
+            result = web_bs4.table_to_dicts(table)
             self.assertEqual(result,
                              [{"3 Cols: AB: A": "1", "3 Cols: AB: B": "2", "3 Cols: C": "3", "1 Cols": "4", "Odd Column: E": "5"},
                               {"3 Cols: AB: A": "11", "3 Cols: AB: B": "12", "3 Cols: C": "13", "1 Cols": "14", "Odd Column: E": "15"}])
@@ -108,7 +108,7 @@ class BS4Case(unittest.TestCase):
             ##  |   1   | 2  |   3   | 4 |
             ##  +------------------------+
             table = soup.find("table",id="complex4")
-            result = web.bs4_table_to_dicts(table)
+            result = web_bs4.table_to_dicts(table)
             self.assertEqual(result,
                              [{"Count":"1", "To":"2", "Three":"3", "__extra":["4",]}
                               ]
@@ -119,7 +119,7 @@ class BS4Case(unittest.TestCase):
             ## +-------------------+
             ## 
             table = soup.find("table",id="complex5")
-            result = web.bs4_table_to_dicts(table)
+            result = web_bs4.table_to_dicts(table)
             self.assertEqual(result,
                              [{"Sharing is":["<",")"], "Caring":"<3", "!":"!"},
                               {"Sharing is":["<",")"], "Caring":"</3", "!":"!"},
@@ -135,25 +135,25 @@ class BS4Case(unittest.TestCase):
         ## Bad Headers 1
         ## thead is empty
         table = soup.find("table", id="badheaders1")
-        self.assertRaisesRegex(AttributeError,"Could not find Headers of table",web.bs4_table_to_dicts,table)
+        self.assertRaisesRegex(AttributeError,"Could not find Headers of table",web_bs4.table_to_dicts,table)
 
         ## Bad Headers 2
         ## No thead and no th
         table = soup.find("table", id="badheaders2")
-        self.assertRaisesRegex(AttributeError,"Could not find Headers of table",web.bs4_table_to_dicts,table)
+        self.assertRaisesRegex(AttributeError,"Could not find Headers of table",web_bs4.table_to_dicts,table)
 
         ## Bad Empty
         ## No tbody and no td
         table = soup.find("table", id="badempty")
         ## Not technically an error, just empty list
-        result = web.bs4_table_to_dicts(table)
+        result = web_bs4.table_to_dicts(table)
         self.assertEqual(result,list())
         
     def test_table_to_dicts_headers_supplied(self):
         soup = testtable()
         table = soup.find("table",id="simple1")
         headers = [["A","B","C"],]
-        result = web.bs4_table_to_dicts(table,headers = headers)
+        result = web_bs4.table_to_dicts(table,headers = headers)
         self.assertEqual(result,
                          [{"A": "Hello", "B":"World", "C": "Hello World"},
                          {"A": "Foo", "B":"bar", "C": "Foobar"}])

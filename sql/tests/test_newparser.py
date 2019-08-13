@@ -107,6 +107,17 @@ class Parse2Case(unittest.TestCase):
             with self.subTest(definition = definition, column = column):
                 self.assertEqual(Parser.parse_column(definition,table),column)
 
+class SamplesCase(unittest.TestCase):
+    """ Tests parser against a collection of sample tables taken from the wild. """
+    def test_primary(self):
+        file = "parser_samples.txt"
+        with open(file,'r') as f:
+            for table in f.readlines():
+                table.strip()
+                if table:
+                    with self.subTest(table = table):
+                        parsed = sql.Table.Table(table, _parser =Parser)
+
 """ More indepth TestCases migrated from the core Test Module """
 
 TABLEDEF = """
@@ -159,19 +170,19 @@ class ColumnDefinitionCase(unittest.TestCase):
         for      definition                                           , name                  , datatype      , constraints in [
                 ("id INT PRIMARY KEY"                                 , "id"                  , "INT"         , [("PRIMARY KEY",{"mode":None,"onconflict":None,"autoincrement":False}),] ),
                 ("value FLOAT"                                        , "value"               , "FLOAT"       , []          ),
-                ("quantity NOT NULL"                                  , "quantity"            , None            , [("NOT NULL",None),]    ),
+                ("quantity NOT NULL"                                  , "quantity"            , ""            , [("NOT NULL",None),]    ),
                 ("name TEXT UNIQUE"                                   , "name"                , "TEXT"        , [("UNIQUE",None),]      ),
                 ('"many-on-one-line" Text'                            , '"many-on-one-line"'  , "Text"        , []          ),
                 ("thecheck REAL CHECK (thecheck is not null)"          , "thecheck"            , "REAL"        , [("CHECK","(thecheck is not null)"),]     ),
                 ("complexcheck NUMERIC CHECK (thecheck IS (id > 10))" , "complexcheck"        , "NUMERIC"     , [("CHECK","(thecheck IS (id > 10))"),]   ),
-                ("thedefault DEFAULT +1"                              , "thedefault"          , None            , [("DEFAULT","+1"),]                      ),
-                ("anotherdefault DEFAULT foobar"                      , "anotherdefault"      , None            , [("DEFAULT","foobar"),]                  ),
-                ("scientificdefault DEFAULT 123.321e+987"             , "scientificdefault"   , None            , [("DEFAULT","123.321e+987"),]            ),
-                ("quoteddefault DEFAULT 'Hello World'"                , "quoteddefault"       , None            , [("DEFAULT","'Hello World'"),]           ),
-                ("defaultexpression DEFAULT ('this' == 'that' )"     , "defaultexpression"   , None            , [("DEFAULT", "('this' == 'that' )"),]    ),
-                ("reference REFERENCES test2"                         , "reference"           , None            , [("REFERENCES", ("test2",() )),]               ),
-                ("directreference REFERENCES test3(this)"             , "directreference"     , None            , [("REFERENCES",("test3",("this",) )),]          ),
-                ("binarycollate COLLATE BINARY"                       , "binarycollate"       , None            , [("COLLATE","BINARY"),]                  ),
+                ("thedefault DEFAULT +1"                              , "thedefault"          , ""            , [("DEFAULT","+1"),]                      ),
+                ("anotherdefault DEFAULT foobar"                      , "anotherdefault"      , ""            , [("DEFAULT","foobar"),]                  ),
+                ("scientificdefault DEFAULT 123.321e+987"             , "scientificdefault"   , ""            , [("DEFAULT","123.321e+987"),]            ),
+                ("quoteddefault DEFAULT 'Hello World'"                , "quoteddefault"       , ""            , [("DEFAULT","'Hello World'"),]           ),
+                ("defaultexpression DEFAULT ('this' == 'that' )"     , "defaultexpression"   , ""            , [("DEFAULT", "('this' == 'that' )"),]    ),
+                ("reference REFERENCES test2"                         , "reference"           , ""            , [("REFERENCES", ("test2",() )),]               ),
+                ("directreference REFERENCES test3(this)"             , "directreference"     , ""            , [("REFERENCES",("test3",("this",) )),]          ),
+                ("binarycollate COLLATE BINARY"                       , "binarycollate"       , ""            , [("COLLATE","BINARY"),]                  ),
                 ("convoluted TEXT NOT NULL UNIQUE ON CONFLICT ROLLBACK DEFAULT ('this' == 'that') CHECK (convoluted != 'Hello') REFERENCES test3(foobar) COLLATE BINARY"
                                                                                 , "convoluted"          , "TEXT"        , [("NOT NULL",None),
                                                                                                                            ("UNIQUE","ROLLBACK"),
@@ -394,7 +405,7 @@ class VirtualTableCase(unittest.TestCase):
         self.assertTrue(hasattr(obj,"columns"))
         for (column,dtype,constraint) in [ ("name","TEXT","NOT NULL"),
                                       ("value","INT",None),
-                                      ("description",None,None)]:
+                                      ("description","",None)]:
             col = [col for col in obj.columns.values() if col.name == column]
             self.assertTrue(col)
             self.assertEqual(len(col),1)

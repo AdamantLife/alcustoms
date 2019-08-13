@@ -155,6 +155,7 @@ def one_in_one_out(self=False):
     _self = self
     del self
     def actualdecorator(func):
+        @functools.wraps(func)
         def decor(*args,**kw):
             result = func(*args,**kw)
             if not result: return result
