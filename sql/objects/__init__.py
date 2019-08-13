@@ -747,7 +747,7 @@ class ColumnReference():
         return hash(self.fullname)
 
 class Column():
-    def __init__(self, name, table = None, datatype = None, constraints = None, comments = None, definition = ""):
+    def __init__(self, name, table = None, datatype = "", constraints = None, comments = None, definition = ""):
         if constraints is None: constraints = list()
         if comments is None: comments = list()
 
@@ -772,7 +772,7 @@ class Column():
 
     @property
     def datatype(self):
-        if self._datatype is None: return "blob"
+        if self._datatype == "": return "blob"
         else:
             return self._datatype
     @datatype.setter
@@ -785,6 +785,8 @@ class Column():
         datatype = ""
         if self._datatype:
             datatype = " " + self.datatype
+        elif self._datatype is None:
+            datatype = " NULL"
         constraints = ""
         if self.constraints:
             constraints = " " + " ".join(con.definition for con in self.constraints)
@@ -859,7 +861,7 @@ class Column():
         return str(self.name)
 
 class AdvancedColumn(Column):
-    def __init__(self, name, table = None, datatype = None, constraints = None, tableconstraints = None, comments = None, definition = ''):
+    def __init__(self, name, table = None, datatype = "", constraints = None, tableconstraints = None, comments = None, definition = ''):
         if not isinstance(table,Table.AdvancedTable):
             raise AttributeError("AdvancedColumn's table must be a table")
         return super().__init__(name, table, datatype, constraints, tableconstraints, comments, definition)

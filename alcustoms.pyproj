@@ -29,6 +29,7 @@
     <Content Include="sql\objects\__pycache__\Table.cpython-36.pyc" />
     <Content Include="sql\objects\__pycache__\View.cpython-36.pyc" />
     <Content Include="sql\objects\__pycache__\__init__.cpython-36.pyc" />
+    <Content Include="sql\tests\parser_samples.txt" />
     <Content Include="tests\exceltests.json" />
     <Content Include="tkinter\images\allogo.png" />
     <Content Include="tkinter\images\buttoncover.png" />

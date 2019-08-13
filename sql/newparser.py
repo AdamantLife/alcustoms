@@ -42,6 +42,7 @@ TABLECREATE_TYPERE = re.compile("""
 COLUMNTOKENS = [
     ("\);?","closeparens"),
     (",","endcolumn"),
+    ("NULL","null"),
     ("AUTOINCREMENT(?!\w)","autoincrement"),
     (objects.ONCONFLICTRE_regex,"conflictclause"),
     ("(?:ASC|DESC)(?!\w)","sorting"),
@@ -55,6 +56,7 @@ COLUMNTOKENS = [
     ("FOREIGN\s+KEY(?!\w)","tableforeignkeyclause"),
     ("--(.*)","comment"),
     ("\/\*","multilinecomment"),
+    ("\w+\(\d+(\,\d+)?\)","signedtype"),
     ("\w+","identifier"),
     (".+","other")
     ]
@@ -389,6 +391,14 @@ class Parser():
                 addcolumn()
                 column = None
 
+            elif name == "null":
+                ## NULL cannot be used before column definition
+                if not column: raise ValueError
+                ## NULL can be set as datatype
+                if not column.datatype: 
+                    column.datatype = None
+                ## Otherwise, NULL seems to be ignored completely
+
             elif name == "primarykey":
                 ## If we match Primary Key without a column, PK is a 
                 ## Table Constraint and is handled separately
@@ -465,26 +475,33 @@ class Parser():
                 last = name
                 match = COLUMNRE.match(d)
                 continue
+            elif name == "signedtype":
+                if not column:
+                    raise ValueError(f'Near "{match.group(0)}" syntax')
+                column._datatype = (column._datatype+" "+match.group(0)).strip()
             else:
                 ## This option covers both "identifier" and "other"
                 if name not in ("identifier","other"):
                     ## This is a check to ensure that we remember to add logic for future tokens
                     raise SyntaxError(f"Undefined Token: {name}")
-                if not column or column._datatype is None:
-
-                    identifier = objects.Identifier.parse(match.group(0))
-                    d = d.replace(identifier.raw,"",1).strip()
-                    if not column:
-                        column = objects.Column(identifier, table = self._obj)
-                    ## column._datatype is None
-                    else:
-                        column.datatype = identifier.raw
-                    ## Since we are not using the full match, we'll continue from here
-                    last = name
-                    match = COLUMNRE.match(d)
-                    continue
+                try: identifier = objects.Identifier.parse(match.group(0))
+                except: raise ValueError(f'Near "{match.group(0)}" syntax')
+                d = d.replace(identifier.raw,"",1).strip()
+                if not column:
+                    column = objects.Column(identifier, table = self._obj)
+                    last = "columnidentifier"
+                ## Check if datatype
                 else:
-                    raise ValueError(f'Near "{match.group(0)}" syntax')
+                    ## Check if the last token was a column name, or a type of datatype
+                    if last not in ["columnidentifier","datatype","signedtype"]:
+                        ## Note that if "null" was the datatype, it is an error to try to concat to it
+                        raise ValueError(f'Near "{match.group(0)}" syntax')
+                    ## Datatypes can be concatted with spaces
+                    column._datatype = (column._datatype + " "+identifier.raw).strip()
+                    last = "datatype"
+                ## Since we are not using the full match, we'll continue from here
+                match = COLUMNRE.match(d)
+                continue
 
             last = name
             d = stripmatch(d,match)
