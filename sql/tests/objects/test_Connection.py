@@ -12,6 +12,41 @@ from alcustoms.sql import objects, Utilities
 from alcustoms.sql.objects import Table, View
 
 
+class DatabaseNoSetup(unittest.TestCase):
+    """ TestCase for tests that don't require initial setup """
+    def test_contextmanager(self):
+        """ Tests that a Database Object can act as a Context Manager """
+        with Connection.Database(":memory:") as db:
+            ## Database was initialized
+            self.assertIsInstance(db, Connection.Database)
+            ## Should not raise an error
+            db.execute("""CREATE TABLE a (value INTEGER);""")
+            
+        ## DB should now be closed
+        self.assertRaisesRegex(sql.ProgrammingError, "Cannot operate on a closed database", lambda: db.execute(""))
+
+    @utils.filemanager
+    def test_contextmanager_autocommit(self, file):
+        """ Tests that the Connection does not commit unless autocommit() is called """
+        with Connection.Database(file) as db:
+            ## Table Creation is automatically commited by sqlite3 regardless
+            db.execute("""CREATE TABLE a (value INTEGER);""")
+            ## This Value will not be saved
+            ## (sqlite3 autocommits Table Creation, so the table will persist)
+            db.execute("""INSERT INTO a (value) VALUES (1);""")
+
+        ## Test autocommit
+        with Connection.Database(file).autocommit() as db:
+            sel = db.execute("""SELECT * FROM a;""").fetchone()
+            ## Previous execution should not have saved
+            self.assertIsNone(sel)
+            db.execute("""INSERT INTO a (value) VALUES (2);""")
+
+        ## DB should have saved
+        with Connection.Database(file) as db:
+            sel = db.execute("""SELECT * FROM a;""").fetchone()
+            self.assertEqual(sel, (2,))
+
 class DatabaseObjectCase(unittest.TestCase):
     """ Tests basic functionalities """
     def setUp(self):
