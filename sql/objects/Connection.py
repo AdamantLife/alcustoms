@@ -74,6 +74,9 @@ class Database(Connection):
     the original file as a pathlib.Path object, a number of utility functions, and integration
     with other classes in this module.
     """
+    ## Variable for use as Context Manager to autocommit before closing
+    _contextcommit = False
+
     def __init__(self, file, check_same_thread = False, timeout = 10, _parser = None, row_factory = None, table_constructor = None, **kw):
         """ Initializes a new Database object.
 
@@ -132,6 +135,12 @@ class Database(Connection):
         result = self.execute("""SELECT * FROM sqlite_master WHERE type="table" OR type="view";""").fetchall()
         return [r['sql'] for r in result]
         #return result
+
+    def is_open(self):
+        """ Returns whether or not the Database connection is open """
+        try: self.execute("")
+        except ProgrammingError: return False
+        return True
 
     ###############################################
     """
@@ -324,3 +333,28 @@ class Database(Connection):
     def dropview(self,viewname):
         """ Removes a view from the database. viewname can be a string representing the View's name, or a View object """
         self.removeview(viewname)
+
+
+    ###############################################
+    """
+                Context Manager
+                                                """
+    ###############################################
+    def __enter__(self):
+        return self
+
+    def __exit__(self,*exc):
+        if self._contextcommit:
+            self.commit()
+        self.close()
+
+    def autocommit(self):
+        """ Set the Database to automatically commit when it is used as a Context Manager.
+
+            Example Usage:
+                with Database(":memory:").autocommit() as db:
+                    ## Execute Statements
+                ## Upon exit, the Database will call commit()
+        """
+        self._contextcommit = True
+        return self

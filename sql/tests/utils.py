@@ -1,6 +1,11 @@
 """ A collection of table population utilities for testing """
 
+## Sister Modules
 from alcustoms.sql.objects import Connection,Table
+
+## Builtin
+import functools
+import pathlib
 
 TESTTABLESQL = """CREATE TABLE testtable(name TEXT, value INTEGER)"""
 def gettesttableconstructor():
@@ -108,3 +113,26 @@ TESTVIEWSQL = """CREATE VIEW testview AS
 SELECT name
 FROM testtable
 ORDER BY name;"""
+
+def check_physicalfile():
+    file = "__test__.db"
+    file = pathlib.Path(file).resolve()
+    if file.exists():
+        try:
+            file.unlink()
+        except:
+            time.sleep(1)
+            file.unlink()
+    return file
+
+def filemanager(func):
+    """ A Decorator to automatically check for, supply, and remove afterwards a physical file (per check_physicalfile) """
+    @functools.wraps(func)
+    def inner(*args,**kw):
+        file = check_physicalfile()
+        try: return func(*args,file = file, **kw)
+        finally:
+            ## check_physicalfile unlinks existing files
+            ## and does not create a new (only returns a Path)
+            check_physicalfile()
+    return inner
