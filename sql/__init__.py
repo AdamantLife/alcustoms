@@ -1,3 +1,4 @@
+from sqlite3 import *
 from .newparser import Parser
 from . import objects
 

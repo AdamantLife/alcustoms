@@ -1,5 +1,5 @@
 ## Test Target
-from alcustoms.sql import Table
+from alcustoms.sql.objects import Table
 
 ## Test Framework
 import unittest
@@ -9,7 +9,7 @@ from alcustoms.sql.tests import utils
 
 ## This module
 from alcustoms.sql import constants, objects
-from alcustoms.sql import Connection
+from alcustoms.sql.objects import Connection
 
 ## Builtin
 import collections

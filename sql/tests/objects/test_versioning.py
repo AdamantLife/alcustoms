@@ -55,7 +55,7 @@ class BasicCase(unittest.TestCase):
 
     def test_updateversion_default_version(self):
         """ Tests that when no version is provided, the default is added instead """
-        table = Table.Table("""CREATE TABLE blah(a);""")
+        table = Table("""CREATE TABLE blah(a);""")
         self.memdb.addtables(table)
         self.memdb.updateversion(table)
         self.assertEqual(self.memdb.getversion(table),"2.0")
@@ -65,7 +65,7 @@ class BasicCase(unittest.TestCase):
 
     def test_addtable_hook(self):
         """ Tests that Database.addtable is properly extended """
-        table = Table.Table("""CREATE TABLE blah(a);""")
+        table = Table("""CREATE TABLE blah(a);""")
         success,fail = self.memdb.addtables(table)
         self.assertEqual(len(success),1)
         self.assertEqual(len(fail),0)
@@ -73,13 +73,13 @@ class BasicCase(unittest.TestCase):
 
         version = "12.34"
         self.memdb.default_version = version
-        table = Table.Table("""CREATE TABLE foo(b);""")
+        table = Table("""CREATE TABLE foo(b);""")
         self.memdb.addtables(table)
         self.assertEqual(self.memdb.getversion(table),version)
 
     def test_updateversion_updatescripts(self):
         """ Tests that the database applies the update script and stores the update/rollbackscripts if they are supplied """
-        table = Table.Table("""CREATE TABLE blah(a);""")
+        table = Table("""CREATE TABLE blah(a);""")
         self.memdb.addtables(table)
 
         version,updatescript,rollbackscript = "2.0","""ALTER TABLE blah ADD COLUMN b TEXT;""",generate_dropcolumn(table,"b")
@@ -96,7 +96,7 @@ class BasicCase(unittest.TestCase):
 
     def test_rollback(self):
         """ Tests that the database can use rollbackscript to rollback a table """
-        table = Table.Table("""CREATE TABLE blah(a);""")
+        table = Table("""CREATE TABLE blah(a);""")
         self.memdb.addtables(table)
         self.memdb.updateversion(table,"2.0","""ALTER TABLE blah ADD COLUMN b TEXT;""",generate_dropcolumn(table,"b"))
 
@@ -107,6 +107,27 @@ class BasicCase(unittest.TestCase):
         table = self.memdb.getadvancedtable("blah")
         self.assertNotIn('b',table.columns)
         self.assertEqual(self.memdb.getversion(table),"1.0")
+
+    def test_exampleusage(self):
+        """ Double checks that the example usage is valid """
+
+        db = VersionedDatabase(":memory:")
+
+        db.addtables(Table("CREATE TABLE a (name TEXT);"))
+        table = db.gettable("a")
+        self.assertEqual(db.getversion(table), DotVersion("1.0"))
+
+        update_script = "ALTER TABLE a ADD COLUMN value INTEGER;"
+        rollback_script = generate_dropcolumn(table, "value")
+        db.updateversion("a",updatescript = update_script, rollbackscript = rollback_script)
+        table = db.gettable("a")
+        self.assertEqual(db.getversion(table), DotVersion("2.0"))
+        self.assertEqual(list(table.columns),["name","value"])
+
+        db.rollbackversion(table)
+        table = db.gettable("a")
+        self.assertEqual(db.getversion(table), DotVersion("1.0"))
+        self.assertEqual(list(table.columns), ["name",])
 
 if __name__ == "__main__":
     unittest.main()

@@ -14,7 +14,7 @@ class Advanced_RowIDCase(unittest.TestCase):
     """
     def setUp(self):
         self.db = sql.Database(":memory:")
-        self.db.addtables(sql.Table.Table("""CREATE TABLE test (a TEXT, b INT);"""), sql.Table.Table("""CREATE TABLE test2 (a INTEGER PRIMARY KEY AUTOINCREMENT, b INT);"""))
+        self.db.addtables(sql.Table("""CREATE TABLE test (a TEXT, b INT);"""), sql.Table("""CREATE TABLE test2 (a INTEGER PRIMARY KEY AUTOINCREMENT, b INT);"""))
         self.table1 = self.db.getadvancedtable("test")
         self.table2 = self.db.getadvancedtable("test2")
         return super().setUp()

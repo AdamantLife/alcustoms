@@ -1,5 +1,42 @@
+""" alcustoms.sql.objects.versioning
+
+    Versioning framework for alcustoms.sql.Database objects.
+    Uses the DotVersion class from alcustoms.methods to parse version numbers.
+
+    Example Usage:
+
+        from alcustoms.sql import generate_dropcolumn
+
+        ## Database Subclass with the VersionMixin applied
+        db = VersionedDatabase(":memory:")
+
+        ## addtable automatically sets the initial version number
+        ## (default "1.0")
+        db.addtables(Table("CREATE TABLE a (name TEXT);"))
+        table = db.gettable("a")
+        print(db.getversion(table))
+        >>> 'DotVersion("1.0")'
+
+        ## updateversion will set a new version, apply an script to update the table, and rollback
+        update_script = "ALTER TABLE a ADD COLUMN value INTEGER;"
+        rollback_script = generate_dropcolumn(table, "value")
+        db.updateversion("a",updatescript = update_script, rollbackscript = rollback_script)
+        table = db.gettable("a")
+        print(db.getversion(table))
+        >>> 'DotVersion("2.0")'
+        print(list(table.columns))
+        >>> ["name","value"]
+
+        db.rollbackversion(table)
+        table = db.gettable("a")
+        print(db.getversion(table))
+        >>> 'DotVersion("1.0")'
+        print(list(table.columns))
+        >>> ["name"]
+"""
+
 from .Connection import *
-from alcustoms.sql import Table, advancedrow_factory
+from alcustoms.sql import Table, advancedrow_factory, TableExistsError
 from .Utilities import temp_row_factory
 from alcustoms.methods import DotVersion
 
@@ -49,20 +86,20 @@ class VersionMixin():
 
     def getversion(self,table):
         """ Returns the version number for the given table """
-        if isinstance(table,Table.Table): table = table.name
+        if isinstance(table,Table): table = table.name
         if not isinstance(table,str): raise TypeError(f"table should be a string or a Table object, not {table.__class__.__name__}")
 
         result = self.getadvancedtable(VERSIONTABLE).quickselect(tablename = table, columns = ["version",]).last()
-        if not result: raise Table.TableExistsError()
+        if not result: raise TableExistsError()
         return DotVersion(result[0])
 
     def updateversion(self,table, version = None, updatescript = None, rollbackscript = None):
-        if isinstance(table,Table.Table): table = table.name
+        if isinstance(table,Table): table = table.name
         if not isinstance(table,str): raise TypeError(f"table should be a string or a Table object, not {table.__class__.__name__}")
 
         current = None
         try: current = self.getversion(table)
-        except Table.TableExistsError: pass
+        except TableExistsError: pass
 
         if version is None:
             if current: version = current + self.default_version
@@ -82,6 +119,7 @@ class VersionMixin():
         
             Returns the version row that was removed.
         """
+        if isinstance(table,Table): table = table.name
         version = self.getversion(table)
         with temp_row_factory(self,advancedrow_factory):
             vtable = self.getadvancedtable(VERSIONTABLE)

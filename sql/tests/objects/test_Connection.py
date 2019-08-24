@@ -8,8 +8,8 @@ from alcustoms.sql.tests import utils
 
 ## Sister Modules
 from alcustoms import sql
-from alcustoms.sql import objects, Utilities
-from alcustoms.sql.objects import Table, View
+from alcustoms.sql import objects
+from alcustoms.sql.objects import Table, View, Utilities
 
 
 class DatabaseObjectCase(unittest.TestCase):

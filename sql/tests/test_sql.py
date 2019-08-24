@@ -142,7 +142,7 @@ class IdentifierCase(unittest.TestCase):
     def test_hashability(self):
         """ Tests that Identifiers are Hashable """
         lookup = dict(mycolumn=sql.Column("mycolumn",datatype="Text"))
-        self.assertIn(sql.Identifier.parse("mycolumn"),lookup)
+        self.assertIn(objects.Identifier.parse("mycolumn"),lookup)
 
 class ConflictClauseCase(unittest.TestCase):
     def setUp(self):

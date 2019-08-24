@@ -41,7 +41,7 @@ class BasicCase(unittest.TestCase):
         """ Tests a basic, fresh initialization """
         db = graphdb.GraphDB(":memory:")
         ## Make sure GraphDB is a subclass of Database
-        self.assertIsInstance(db,sql.Connection.Database)
+        self.assertIsInstance(db,sql.Database)
 
         ## Check graphdb_edges
         table = db.gettable("graphdb_edges")
