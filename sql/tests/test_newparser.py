@@ -1,6 +1,7 @@
 from alcustoms import sql
-from alcustoms.sql import virtual
+from alcustoms.sql import objects, virtual
 from alcustoms.sql.newparser import Parser
+from alcustoms.sql.objects import View
 import unittest
 
 import collections
@@ -26,7 +27,7 @@ class Parse2Case(unittest.TestCase):
         """ Tests some basic tables """
         for testtable in TESTTABLES():
             with self.subTest(testtable = testtable):
-                table = sql.Table.Table(testtable['definition'], _parser =Parser)
+                table = sql.Table(testtable['definition'], _parser =Parser)
                 for column in testtable['columns']:
                     with self.subTest(column = column, table = table):
                         self.assertIn(column['name'],table.columns)
@@ -38,7 +39,7 @@ class Parse2Case(unittest.TestCase):
                                 with self.subTest(tcolumn = tcolumn, constraint = constraint):
                                     name = constraint['name']
                                     if name == "PRIMARY KEY":
-                                        con = [con for con in tcolumn.constraints if isinstance(con,sql.PrimaryKeyConstraint)]
+                                        con = [con for con in tcolumn.constraints if isinstance(con,objects.PrimaryKeyConstraint)]
                                         self.assertTrue(con)
                                         con = con[0]
                                         self.assertEqual(con.autoincrement,constraint['autoincrement'])
@@ -98,12 +99,12 @@ class Parse2Case(unittest.TestCase):
                                                 ("""CREATE TABLE blah (name TEXT,);""", ValueError, 'Near "\)" syntax'), ## Near Parentheses
                                                 ]:
             with self.subTest(definition = definition, errortype = errortype, errorre = errorre):
-                self.assertRaisesRegex(errortype,errorre,sql.Table.Table,definition,_parser = Parser)
+                self.assertRaisesRegex(errortype,errorre,sql.Table,definition,_parser = Parser)
 
     def test_basic_parsecolumn(self):
         """ A basic test for Parser.parse_column """
-        table = sql.TableConstructor("testtable", columns = [sql.Column("blah"),]).to_table()
-        for (definition,column) in [("name TEXT",sql.Column("name",datatype="TEXT")),]:
+        table = sql.TableConstructor("testtable", columns = [objects.Column("blah"),]).to_table()
+        for (definition,column) in [("name TEXT",objects.Column("name",datatype="TEXT")),]:
             with self.subTest(definition = definition, column = column):
                 self.assertEqual(Parser.parse_column(definition,table),column)
 
@@ -116,7 +117,7 @@ class SamplesCase(unittest.TestCase):
                 table.strip()
                 if table:
                     with self.subTest(table = table):
-                        parsed = sql.Table.Table(table, _parser =Parser)
+                        parsed = sql.Table(table, _parser =Parser)
 
 """ More indepth TestCases migrated from the core Test Module """
 
@@ -229,9 +230,9 @@ class ColumnDefinitionCase(unittest.TestCase):
     def test_comments(self):
         """ Tests that comments are found """
         for column, commentline,commenttype, commenttext in [
-            (None,"--This is a comment",sql.Comment,"This is a comment"),
+            (None,"--This is a comment",objects.Comment,"This is a comment"),
             (None, """/* Random Long
-Comment Before Table Constraints */""", sql.MultilineComment, """ Random Long
+Comment Before Table Constraints */""", objects.MultilineComment, """ Random Long
 Comment Before Table Constraints """)]:
             with self.subTest(column = column, commentline=commentline,commenttype=commenttype,commenttext=commenttext):
                 if column:
@@ -292,7 +293,7 @@ class TableCase(unittest.TestCase):
 
     def test_correcttable(self):
         """ Tests that the Parser actually matched """
-        self.assertIsInstance(self.parser.obj,sql.Table.Table)
+        self.assertIsInstance(self.parser.obj,sql.Table)
 
     def test_temporary(self):
         """ Tests that the regex found the temporary table tag """
@@ -331,7 +332,7 @@ class TableCase(unittest.TestCase):
 #        ## Test that it is existok
 #        self.assertTrue(self.view.existsok)
 #        ## Test Schema/name
-#        self.assertIsInstance(self.view._name,sql.MultipartIdentifier)
+#        self.assertIsInstance(self.view._name,objects.MultipartIdentifier)
 #        self.assertEqual(self.view.schema,"schema")
 #        self.assertEqual(self.view.name,'"A view"')
 
@@ -352,7 +353,7 @@ class SimpleSelectStatementCase(unittest.TestCase):
         FROM testtable;"""
         parser = Parser(definition)
         self.assertTrue(parser.obj)
-        self.assertIsInstance(parser.obj,sql.SimpleSelectStatement)
+        self.assertIsInstance(parser.obj,View.SimpleSelectStatement)
     def test_selectmode(self):
         """ Tests that the parser finds the correct Select.mode """
         definition = """

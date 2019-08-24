@@ -45,7 +45,7 @@ def get_tags(obj,*tags):
         will be included.
         """
     tags = list(tags)
-    if isinstance(obj,sql.Table.Table):
+    if isinstance(obj,sql.Table):
         tags.append("table")
     elif isinstance(obj,sql.Column):
         tags.append("column")
@@ -280,7 +280,7 @@ class TreeController(advancedtkinter.Controller):
 
     def additem(self,object,parent):
         """ Adds the given object to the given parent """
-        if isinstance(object,sql.Table.Table): name = object.fullname
+        if isinstance(object,sql.Table): name = object.fullname
         elif isinstance(object,sql.Column): name = object.name
         elif isinstance(object,sql.Constraint): name = object.constraint
         else: name = "None"
@@ -324,7 +324,7 @@ class TreeController(advancedtkinter.Controller):
         sel = self.tree.selection(1)
         if sel in self.lookup:
             obj = self.lookup[sel]
-            if isinstance(obj,sql.Table.Table):
+            if isinstance(obj,sql.Table):
                 text = self.tree.item(sel,"text")
                 if text == SHOWMORE:
                     self.populaterows(sel)
@@ -375,7 +375,7 @@ class TreeController(advancedtkinter.Controller):
         rowvalue = self.getrowvalue(iid)
         for r_iid in self.tree.get_children(iid):
             ## SHOWMORE has a (Advanced)Table value in lookup
-            if r_iid in self.lookup and not isinstance(self.lookup[r_iid],sql.Table.Table):
+            if r_iid in self.lookup and not isinstance(self.lookup[r_iid],sql.Table):
                 self.tree.item(r_iid, text = self.lookup[r_iid][str(rowvalue)])
 
 class DescriptionController(advancedtkinter.Controller):

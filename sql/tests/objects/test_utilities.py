@@ -6,7 +6,7 @@ import re
 
 class DropColumnCase(unittest.TestCase):
     def setUp(self):
-        self.table = Table.Table("""CREATE TABLE a (a INTEGER, b TEXT);""")
+        self.table = Table("""CREATE TABLE a (a INTEGER, b TEXT);""")
         self.db = Database(":memory:")
     def test_match_text(self):
         """ Checks for expected output string """

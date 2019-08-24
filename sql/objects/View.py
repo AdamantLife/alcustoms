@@ -12,6 +12,8 @@ from sqlite3 import OperationalError
 ## Builtin
 from collections import OrderedDict
 
+__all__ = []
+
 def getalltables(conn):
     """ Returns a list of Tables from a Database """
     sel = conn.execute("""SELECT * FROM sqlite_master

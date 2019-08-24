@@ -8,6 +8,8 @@ import functools
 import pathlib
 from sqlite3 import *
 
+__all__ = ["Database",]
+
 ############################################
 """
              UTILITY FUNCTIONS

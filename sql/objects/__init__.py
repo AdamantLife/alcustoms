@@ -13,6 +13,8 @@ from alcustoms.methods import isiterable
 ## This Module
 from alcustoms.sql.constants import *
 
+__all__ = ["QueryResult","dict_factory","object_to_factory","SQLColumn","AdvancedRow","advancedrow_factory","Advanced_RowID","Comment","MultilineComment","ColumnReference","Column","AdvancedColumn",]
+
 """ To enable parsing, set PARSER at the module-level (PARSER is set automatically to .NewParser.Parser """
 PARSER = None
 
@@ -93,7 +95,7 @@ def performreplacements(sqlstring,lookup):
     return reg.sub(replace,sqlstring)
 
 class ReplacementFactory():
-    """ A simple object that dynamically generatess variables that can be used for sql placeholders.
+    """ A simple object that dynamically generates variables that can be used for sql placeholders.
     
     I like this better to get around scoping than "counter,repl = getnextrepl(counter)"
     """
