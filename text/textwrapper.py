@@ -9,6 +9,8 @@
 import textwrap
 import math
 
+__all__ = ["TextWrapper",]
+
 ALIGNMENT = {"left":"<","center":"^","right":">"}
 
 class TextWrapper(textwrap.TextWrapper):

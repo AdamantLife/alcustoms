@@ -18,6 +18,8 @@
 import collections ## Used to collate keys when headers are not supplied (via collections.OrderedDict)
 import functools ## Decorators: validate_colwidths. (via functools.wraps)
 
+__all__ = ["TextTable",]
+
 def validate_title(func):
     @functools.wraps(func)
     def inner(*args, title = None, **kw):
