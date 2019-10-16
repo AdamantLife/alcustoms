@@ -30,7 +30,7 @@
     <Content Include="sql\objects\__pycache__\View.cpython-36.pyc" />
     <Content Include="sql\objects\__pycache__\__init__.cpython-36.pyc" />
     <Content Include="sql\tests\parser_samples.txt" />
-    <Content Include="tests\exceltests.json" />
+    <Content Include="excel\tests\exceltests.json" />
     <Content Include="tkinter\images\allogo.png" />
     <Content Include="tkinter\images\buttoncover.png" />
     <Content Include="tkinter\images\dice.png" />
@@ -70,7 +70,28 @@
     </Compile>
     <Compile Include="directoryinfo.py" />
     <Compile Include="emailer.py" />
-    <Compile Include="excel.py">
+    <Compile Include="excel\Coordinates.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="excel\Ranges.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="excel\Tables.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="excel\tests\test_Coordinates.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="excel\tests\test_Ranges.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="excel\tests\test_Tables.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="excel\tests\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="excel\__init__.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="filemodules.py" />
@@ -166,9 +187,6 @@
     </Compile>
     <Compile Include="sql\__init__.py" />
     <Compile Include="subclasses.py" />
-    <Compile Include="tests\test_excel.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="tests\graphql_querytests.py">
       <SubType>Code</SubType>
     </Compile>
@@ -261,9 +279,11 @@
     <Compile Include="__init__.py" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="excel\tests\" />
     <Folder Include="gaming" />
     <Folder Include="gaming\dice" />
     <Folder Include="gtk" />
+    <Folder Include="excel\" />
     <Folder Include="text\" />
     <Folder Include="text\tests\" />
     <Folder Include="web\" />
