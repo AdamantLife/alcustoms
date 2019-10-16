@@ -763,16 +763,12 @@ class ScrolledWidget(Pane):
         self.vbar['command'] = self.widget.yview
 
         widget_methods = set(vars(widget).keys())
-        print(widget_methods)
         frame_methods = vars(tk.Pack).keys() | vars(tk.Grid).keys() | vars(tk.Place).keys()
-        print(frame_methods)
         ## Don't overwrite packing methods
         methods = widget_methods.difference(frame_methods)
         for m in widget_methods:
-            print(".",m)
             if m[0]!='_' and m!='config' and m!='configure':
-                print(m,getattr(widget,m))
-                setattr(self, m, getattr(widget,m))
+                setattr(self, m, getattr(self.widget,m))
 
 if __name__=='__main__':
     font=ALFont()

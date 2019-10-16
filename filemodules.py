@@ -4,6 +4,7 @@ import queue
 import re
 import shutil
 import threading
+import time
 
 ## This Module
 from alcustoms import constants
@@ -197,7 +198,7 @@ def threaded_iterdir_re(pathobj, regexobj, *, test = pathlib.Path.is_file, as_st
     def _iterdir(path):
         try:
             for child in path.iterdir():
-                if test(child):
+                if test(child) and regexobj.search(child.name):
                     if as_string: collectionQ.put(str(child))
                     else: collectionQ.put(child)
                 if recurse and child.is_dir(): directoryQ.put(child)

@@ -885,8 +885,8 @@ class AdvancedTable(Table):
             select[key] = value
 
         indb = self.quickselect(rowid = True, **select)
-        rowid = str(self.rowid)
         if indb.first():
+            rowid = str(self.rowid)
             return [row[rowid] for row in indb]
 
         return [self.addrow(**select),]

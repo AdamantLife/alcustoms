@@ -23,7 +23,7 @@ MEASUREMENTRE = re.compile("""
 """,re.VERBOSE)
 
 MEASURETOKENS = [
-    ("(?P<numerator>\d+)\/(?P<denominator>\d+)","fraction"),
+    ("(?P<numerator>\d+)\s*\/\s*(?P<denominator>\d+)","fraction"),
     ("\d+","number"),
     ("(?P<unit>ft|in)\.?","alpha_unit"),
     (r"\'|\"","symbol_unit"),
@@ -155,6 +155,10 @@ def convertmeasurement(value, _safe = True):
 
 def tomeasurement(value):
     """ Converts a float representing a measurement back into the DadsDoor-formatted Measurement String """
+    if not isinstance(value,float):
+        try: value = float(value)
+        except:
+            raise TypeError(f"tomeasure requires a float: {value.__class__.__name__}")
     feet, rest = int(value // 12), value % 12
     inches = int(rest)
     fract = fractions.Fraction(rest - inches).limit_denominator(16)
@@ -257,20 +261,31 @@ class Imperial(Measurement):
             return Imperial(self.tofloat() + other.tofloat(), limit = max(self.limit,other.limit))
         if isinstance(other,(int,float)):
             return self.tofloat() + other
+        raise TypeError(f"unsupported operand type(s) for +: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
     def __sub__(self,other):
         if isinstance(other,Imperial):
             return Imperial(self.tofloat() - other.tofloat(), limit = max(self.limit,other.limit))
         if isinstance(other,(int,float)):
             return self.tofloat() - other
+        raise TypeError(f"unsupported operand type(s) for -: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
+    def __rsub__(self,other):
+        if isinstance(other,Imperial):
+            return Imperial(other.tofloat() - self.tofloat(), limit = max(self.limit,other.limit))
+        if isinstance(other,(int,float)):
+            return other - self.tofloat()
+        raise TypeError(f"unsupported operand type(s) for -: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
     def __mul__(self,other):
         if isinstance(other,(int,float)):
             return self.tofloat()*other
+        raise TypeError(f"unsupported operand type(s) for *: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
     def __rmul__(self,other):
         if isinstance(other,(int,float)):
             return self.tofloat()*other
+        raise TypeError(f"unsupported operand type(s) for *: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
     def __truediv__(self,other):
         if isinstance(other,(int,float)):
             return self.tofloat() / other
+        raise TypeError(f"unsupported operand type(s) for /: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
     def __rtruediv__(self,other):
         ## Any reasonable reverse-division would assumably yield a brand new Unit/Class
         raise TypeError(f"unsupported operand type(s) for /: '{other.__class__.__name__}' and '{self.__class__.__name__}'")

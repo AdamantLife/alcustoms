@@ -4,7 +4,7 @@ from alcustoms.text.textwrapper import *
 ## Builtin
 import itertools
 
-def format_list_to_whitespace_columns(values, columns = 2, width = 64, height = 48, orientation = "columns", align="left", truncate = True):
+def format_list_to_columns(values, columns = 2, width = 64, height = 48, orientation = "columns", align="left", truncate = True):
     """ Given a list of objects, format them as columns of strings.
 
         values is a list of objects that will be string formatted.
