@@ -17,9 +17,10 @@ class VariousCase(unittest.TestCase):
         (   "0 1in"             , '0ft.- 1"'        , "1in"         , (0,1,0,0)     , 1         ),
         (   "1 3/4in"           , '0ft.- 1 3/4"'    , "1-3/4in"     , (0,1,3,4)     , 1.75      ),
         (   ' 18 ft.- 1 3/ 8"'  , '18ft.- 1 3/8"'   , "18ft 1-3/8in", (18,1,3,8)    , 217.375   ),
+        (   '10ft1in'           , '10ft.- 1"'       , "10ft 1in"    , (10,1,0,0)    , 121       ),
         ]
 
-    BADTESTS = [1,3.125,None, False, lambda *x,**y: 1, unittest.main, unittest]
+    BADTESTS = [1,3.125,None, False, lambda *x,**y: 1, unittest.main, unittest, "14"]
 
     def test_goodtests(self):
         """ (For now) Tests all Measurements functions against GOODTESTS (valid args).
