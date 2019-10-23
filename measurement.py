@@ -30,7 +30,7 @@ MEASURETOKENS = [
     ("-","step")]
 MTOKENRE = re.compile("|".join(f"(?P<{name}>{token})" for (token,name) in MEASURETOKENS),re.IGNORECASE)
 def measuretotuple(input, _safe = True):
-    """ Converts a string matching the Measurement Format to a tuple of (feet,inches,numerator,denominator)
+    """ Converts a string matching the Imperial Measurement Format to a tuple of (feet,inches,numerator,denominator)
 
         input must be a string.
         If _safe is True (default), this method catches all Exceptions (including Syntax errors) and returns
@@ -123,6 +123,8 @@ def measuretotuple(input, _safe = True):
             match = MTOKENRE.match(v)
         if v:
             raise SyntaxError(f'Near {v} syntax')
+        if number:
+            raise ValueError(f"Near {number} syntax: could not determine type of number")
     except Exception as e:
         if _safe: return input
         raise e
@@ -296,8 +298,10 @@ class Imperial(Measurement):
         if isinstance(other,Imperial):
             return float(self) <= float(other)
     def __eq__(self,other):
-        def isinstance(other,Imperial):
+        if isinstance(other,(Imperial,float,int)):
             return float(self) == float(other)
+    def __repr__(self):
+        return f"Imperial Object: {self.minimize()}"
 
 
 

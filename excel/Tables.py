@@ -4,6 +4,7 @@
 """
 ## Super Module
 from openpyxl.worksheet.table import Table, TableColumn
+from openpyxl.workbook.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 ## This Module
 from alcustoms.excel import Coordinate, Range
@@ -115,20 +116,34 @@ def get_all_tables(workbook):
                 out.append((worksheet,EnhancedTable.from_table(table,worksheet)))
     return out
 
-def get_table_by_name(worksheet,name):
+def get_table_by_name(source,name):
     """ Returns the table with the given displayName.
 
+        source should be a Worksheet or Workbook.
+        name should be the displayName.
+    
         Workbooks that have duplicate tables are considered Invalid by Excel,
         so if this method finds multiple tables with the given displayName it
         will raise a ValueError.
     """
-    if not isinstance(worksheet,Worksheet):
-        raise TypeError("worksheet should be a Worksheet object")
+    if not isinstance(source,(Workbook,Worksheet)):
+        raise TypeError("source should be a Workbook or Worksheet object")
     if not isinstance(name,str):
         raise TypeError("name should be a string")
-    for table in worksheet._tables:
-        if table.displayName == name:
-            return table
+    if isinstance(source, Workbook):
+        sheets = source.worksheets
+    else:
+        sheets = [source,]
+    results = []
+    for worksheet in sheets:
+        for table in worksheet._tables:
+            if table.displayName == name:
+                results.append((worksheet,table))
+    if len(results) > 1:
+        raise ValueError(f'Got multiple values for "{name}"')
+    sheet,table = results[0]
+    if isinstance(table,EnhancedTable): return table
+    return EnhancedTable.from_table(table,sheet)
 
 def dicts_to_table(sheet, dinput, tablename = None, start = None, headers = None):
     """ Writes a list of dictionaries or lists into a Table.
