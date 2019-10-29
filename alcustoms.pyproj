@@ -12,6 +12,7 @@
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId />
+    <TestFramework>unittest</TestFramework>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
@@ -107,6 +108,18 @@
     <Compile Include="gtk\__init__.py" />
     <Compile Include="images.py" />
     <Compile Include="inspection.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="math\evaluator.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="math\tests\test_evaluator.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="math\tests\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="math\__init__.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="measurement.py">
@@ -248,7 +261,7 @@
     <Compile Include="tkinter\tkintersprites.py" />
     <Compile Include="tkinter\widgets.py" />
     <Compile Include="tkinter\__init__.py" />
-    <Compile Include="trig.py" />
+    <Compile Include="math\trig.py" />
     <Compile Include="web\bs4.py">
       <SubType>Code</SubType>
     </Compile>
@@ -284,6 +297,8 @@
     <Folder Include="gaming\dice" />
     <Folder Include="gtk" />
     <Folder Include="excel\" />
+    <Folder Include="math\" />
+    <Folder Include="math\tests\" />
     <Folder Include="text\" />
     <Folder Include="text\tests\" />
     <Folder Include="web\" />

@@ -987,7 +987,7 @@ def pprinttypes(item,level = 0):
             children.append(printtypes(v,level+1))
     return out+ "\n" + "\n".join(children)
 
-if __name__=='__main__':
+if __name__== '__main__':
     pass
     ##### getstringformatting Test
     #teststring=['The {string}','This is {{Not a String}}']

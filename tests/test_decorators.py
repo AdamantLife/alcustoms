@@ -177,5 +177,34 @@ class SignatureDecoratorCase(unittest.TestCase):
         self.assertFalse(self.ranFlag)
         self.assertEqual(result, "bar")
 
+class UnitConversion_DFCase(unittest.TestCase):
+    """ Test Case for the unitconversion_decorator_factory function """
+    def test_deco(self):
+        """ Basic tests for the function """
+        ## Function that will be decorated
+        def my_test(a, b):
+            return a,b
+        ## Factory result
+        to_float_decorator = decorators.unitconversion_decorator_factory(float)
+        ## Test Values
+        argvals = [
+            (None,["1",1.0]), ## The first arg will be converted because None
+            ("a",["3.14",1.0]), ## The first arg will be converted by name
+            (1, [1.0, "2.71828"]), ## The second arg will be converted by index
+            ([0,"b"],["1.61803398875","0.8346268"]), ## A list of args, converting first arg by index and second by name
+            ]
+        for arg,testargs in argvals:
+            with self.subTest(arg = arg, testargs = testargs):
+                ## Normally written:
+                ## @to_float_decorator(arg)
+                ## def mytest(a,b): [... etc]
+                decorated = to_float_decorator(arg)(my_test)
+
+                a,b = decorated(*testargs)
+                self.assertIsInstance(a,float)
+                self.assertIsInstance(b,float)
+
+
+
 if __name__ == "__main__":
     unittest.main()
