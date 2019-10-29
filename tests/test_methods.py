@@ -203,6 +203,5 @@ class TimerCase(unittest.TestCase):
         self.assertEqual(timer.duration_dict("%S"),dict(seconds=5))
         self.assertEqual(timer.duration(),"0:0:5")
 
-
 if __name__ == "__main__":
     unittest.main()

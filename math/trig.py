@@ -1,4 +1,18 @@
+""" alcustoms.math.trig
+
+    Contains various Trigonometry-based equations and helper functions
+"""
+## builtin
 import math
+import functools
+## Sister module
+from alcustoms.decorators import unitconversion_decorator_factory
+
+as_degrees = unitconversion_decorator_factory(math.degrees)
+as_degrees.__doc__ = "A helper-wrapper to automatically convert an argument to degrees.\n" + as_degrees.__doc__
+
+as_radians = unitconversion_decorator_factory(math.radians)
+as_radians.__doc__ = "A helper-wrapper to automatically convert an argument to radians.\n"+as_radians.__doc__
 
 def getcircumradiusofshape(points,sidelen):
     """ Returns the radius of a circle for the given number of points of an equilateral shape with the given sidelength """

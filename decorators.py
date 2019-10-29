@@ -191,6 +191,55 @@ def outputmatcher(matchkey,self = False,missing = None):
         return decor
     return actualdecor
 
+def signature_decorator_factory(*callbacks, apply_defaults = False):
+    """ Creates a decorator which calls the given functions before applying the decorated function.
+    
+        The functions passed to callbacks should accept a single argument, which is a BoundArguments
+        instance for the current decorated function call.
+        If apply_defaults is True (defualt False), BoundArguments.apply_defaults will be called 
+        before the first callback is called.
+
+        Example Usage:
+
+        def update_foo(bargs):
+            \""" If the foo argument is missing, sets foo to 123456789. \"""
+            bargs.apply_defaults()
+            if bargs.arguments['foo'] == None:
+                bargs.arguments['foo'] = 123456789
+
+        foo_decorator = signature_decorator_factory(update_foo)
+
+        @foo_decorator
+        def my_foo(foo): return foo
+
+        @foo_decorator
+        def your_foo(*, foo = None): return foo
+
+        my_foo(None)
+        > 123456789
+
+        my_foo(foo = None):
+        > 123456789
+
+        your_foo():
+        > 123456789
+
+
+        Note that this example, being a common occurence, can be more easily implemented
+        using the dynamic_defaults function below which extends SignatureDecorator.factory.
+    """
+    def decorator(func):
+        sig = inspect.signature(func)
+        @functools.wraps(func)
+        def inner(*args,**kw):
+            ba = sig.bind(*args,**kw)
+            if apply_defaults: ba.apply_defaults()
+            for callback in callbacks:
+                callback(ba)
+            return func(*ba.args,**ba.kwargs)
+        return inner
+    return decorator
+
 class SignatureDecorator():
     """ A class-based implementation of signature_decorator_factory
         which also allows for greater interspection of the function being decorated
@@ -332,56 +381,46 @@ class SignatureDecorator():
             return deco
         return inner
 
+def unitconversion_decorator_factory(conversion_function):
+    """ This is an extension of signature_decorator_factory made to
+        generate math.trig.as_degrees and as_radians, but could be
+        used for other unit conversions.
 
-def signature_decorator_factory(*callbacks, apply_defaults = False):
-    """ Creates a decorator which calls the given functions before applying the decorated function.
-    
-        The functions passed to callbacks should accept a single argument, which is a BoundArguments
-        instance for the current decorated function call.
-        If apply_defaults is True (defualt False), BoundArguments.apply_defaults will be called 
-        before the first callback is called.
+        conversion_function is a callback that will be used to convert
+        the arg value of the decorated function.
 
-        Example Usage:
-
-        def update_foo(bargs):
-            \""" If the foo argument is missing, sets foo to 123456789. \"""
-            bargs.apply_defaults()
-            if bargs.arguments['foo'] == None:
-                bargs.arguments['foo'] = 123456789
-
-        foo_decorator = signature_decorator_factory(update_foo)
-
-        @foo_decorator
-        def my_foo(foo): return foo
-
-        @foo_decorator
-        def your_foo(*, foo = None): return foo
-
-        my_foo(None)
-        > 123456789
-
-        my_foo(foo = None):
-        > 123456789
-
-        your_foo():
-        > 123456789
-
-
-        Note that this example, being a common occurence, can be more easily implemented
-        using the dynamic_defaults function below which extends SignatureDecorator.factory.
+        A general docstring for the generated decorator is provided with it.
     """
-    def decorator(func):
-        sig = inspect.signature(func)
-        @functools.wraps(func)
-        def inner(*args,**kw):
-            ba = sig.bind(*args,**kw)
-            if apply_defaults: ba.apply_defaults()
-            for callback in callbacks:
-                callback(ba)
-            return func(*ba.args,**ba.kwargs)
-        return inner
-    return decorator
+    def converter(arg = None, callback = None):
+        f"""If provided, arg is the decorated function's argument index, name,
+        or a list of such to convert If omitted, arg will be 0 (the first argument).
+        
+        If callback is provided, it will be checked for a Truthy value before
+        the conversion is made; if it evaluates Falsey, the conversion will not
+        be made. callback can be a callable or a persistent value (a Falsey value
+        for callable means that a conversion will never take place).
 
+        This function uses {conversion_function} and does not inspect that the argument(s)
+        value is valid."""
+        if arg and not isinstance(arg,(int,str, list, tuple)):
+            raise TypeError("Invalid arg type: should be an Integer or String if provided")
+        ### Uniform arg
+        if arg is None: arg = 0
+        if isinstance(arg,(list,tuple)): arg = list(arg)
+        else: arg  = [arg,]
+        ## uniform callback
+        if callback:
+            if not callable(callback): callback = lambda: callback
+        def checkupdate(bargs):
+            ## If no callback or callback returns Falsey: do nothing
+            if not callback and callback is not None: return
+            if callback and not callback(): return
+            ## Otherwise, change args
+            for a in arg:
+                if isinstance(a,int): a = list(bargs.arguments)[a]
+                bargs.arguments[a] = conversion_function(bargs.arguments[a])
+        return signature_decorator_factory(checkupdate)
+    return converter
 
 def dynamic_defaults(**kw):
     """ A factory to help implement the most common usage of signature_decorator_factory:
