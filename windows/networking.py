@@ -2,7 +2,11 @@
 from alcustoms.windows import is_admin
 from alcustoms.subclasses import pairdict
 ## Builtin
+import ipaddress
+import multiprocessing
 import subprocess
+import threading
+import typing as t
 import warnings
 ## Third Party
 import python_hosts
@@ -186,6 +190,53 @@ def get_netstat(*args, **kw):
     keys = processline(output.pop(0))
     output = [dict(list(zip(keys,processline(line)))) for line in output if line.strip()]
     return output
+
+
+IPTYPE = t.Union[ipaddress.IPv4Address,ipaddress.IPv6Address,int,str]
+class PingResult(t.TypedDict):
+    addr: t.Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
+    result: bool
+def ping_range(*, startaddr: IPTYPE = None, endaddr: IPTYPE = None, addrlist: t.List[IPTYPE] = None, threads = 1) -> PingResult:
+    """ Given either a start address and end address, or a list of addresses, ping each address and return if there was a response
+    
+        All addresses should be ipaddress.IPv4Address or IPv6Address instances, or addresses parsable by ipaddress.ip_address.
+        If startaddress is provided, endaddress is required (and vice versa). addrlist should not supplied.
+        Conversely, if addrlist is passed, startaddr and endaddr should not be declared.
+        threads should be a positive integer and is used to spawn additional threads to speed up the process
+        Returns a list of dictionary results containing { addr: ipaddress, result: boolean}
+        where result is whether the ping was successful or not.
+    """
+    def is_address(addr):
+        return isinstance(addr,(ipaddress.IPv4Address,ipaddress.IPv6Address))
+    if startaddr and endaddr and addrlist:
+        raise SyntaxError("ping_range should only be called with startaddr and endaddr, or addrlist by itself (not both)")
+    if startaddr and not endaddr:
+        raise SyntaxError("endaddr is required when calling ping_range with startaddr (use addrlist for a single address)")
+    if endaddr and not startaddr:
+        raise SyntaxError("Received endaddr but no startaddr")
+    if not isinstance(threads,int) or threads <= 0:
+        raise ValueError("threads should be a positive integer")
+    if startaddr:
+        try:
+            if not is_address(startaddr): startaddr = ipaddress.ip_address(startaddr)
+        except ValueError: raise ValueError("Could not convert startaddr to IP Address")
+        try:
+            if not is_address(endaddr): endaddr = ipaddress.ip_address(endaddr)
+        except ValueError: raise ValueError("Could not convert endaddr to IP Address")
+        addrlist = sum((list(network) for network in ipaddress.summarize_address_range(startaddr,endaddr)),[])
+    else: ## addrlist
+        try: addrlist = [ipaddress.ip_address(addr) if not is_address(addr) else addr for addr in addrlist]
+        except ValueError: raise ValueError("addrlist contained non-IP Addresses")
+    results = []
+
+    with multiprocessing.Pool(threads) as p:
+        results = p.map(_ping, addrlist)
+
+    return results
+
+def _ping(address):
+    result = subprocess.run(["ping","-n","1",address.exploded], stdout = subprocess.PIPE ,  stderr = subprocess.PIPE, text = True)
+    return dict(addr = address, result = result.returncode == 0 and "host unreachable" not in result.stdout)
 
 if __name__ == "__main__":
     ## TODO: formalize
