@@ -7,7 +7,7 @@ import random
 import tkinter
 ## Custom Module
 import alcustoms.mvc as amvc
-import alcustoms.trig as trig
+from alcustoms.math import trig
 import alcustoms.tkinter.smarttkinter as smarttkinter
 
 ## adopting wholecloth

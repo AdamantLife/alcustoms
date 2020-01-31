@@ -392,16 +392,6 @@ def unitconversion_decorator_factory(conversion_function):
         A general docstring for the generated decorator is provided with it.
     """
     def converter(arg = None, callback = None):
-        f"""If provided, arg is the decorated function's argument index, name,
-        or a list of such to convert If omitted, arg will be 0 (the first argument).
-        
-        If callback is provided, it will be checked for a Truthy value before
-        the conversion is made; if it evaluates Falsey, the conversion will not
-        be made. callback can be a callable or a persistent value (a Falsey value
-        for callable means that a conversion will never take place).
-
-        This function uses {conversion_function} and does not inspect that the argument(s)
-        value is valid."""
         if arg and not isinstance(arg,(int,str, list, tuple)):
             raise TypeError("Invalid arg type: should be an Integer or String if provided")
         ### Uniform arg
@@ -420,6 +410,17 @@ def unitconversion_decorator_factory(conversion_function):
                 if isinstance(a,int): a = list(bargs.arguments)[a]
                 bargs.arguments[a] = conversion_function(bargs.arguments[a])
         return signature_decorator_factory(checkupdate)
+    ## https://bugs.python.org/issue28739 (f-strings cannot be docstrings)
+    converter.__doc__ = f"""If provided, arg is the decorated function's argument index, name,
+        or a list of such to convert If omitted, arg will be 0 (the first argument).
+        
+        If callback is provided, it will be checked for a Truthy value before
+        the conversion is made; if it evaluates Falsey, the conversion will not
+        be made. callback can be a callable or a persistent value (a Falsey value
+        for callable means that a conversion will never take place).
+
+        This function uses {conversion_function} and does not inspect that the argument(s)
+        value is valid."""
     return converter
 
 def dynamic_defaults(**kw):
