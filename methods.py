@@ -198,6 +198,63 @@ class Timer():
                 output[name] = int(output[name])
         return output
 
+class ContextFlag():
+    """ A Lazy Context-base, State-Maintaining Class.
+
+        Lazy in the sense that flags can be set redundantly.
+        Sets state/flags using with-context call.
+        Removes state/flags when 
+
+        Example Usage:
+            class MyClass():
+                def __init__(self):
+                    self.flags = ContextFlag()
+                def foo(self):
+                    ## Set State to "bar" for the duration of this context
+                    with self.flags("bar"):
+                        ## prints "buzz"
+                        self.fizzbuzz()
+                    ## Exit context, so "bar" flag is not set by
+                    ## this function (keep in mind it may be set by another)
+
+                    ## Expected to print "fizz"
+                    self.fizzbuzz()
+                def fizzbuzz(self):
+                    ## This instance's ContextFlag will check
+                    ## if the "bar" flag has been set
+                    if self.flags['bar']:
+                        print("buzz")
+                    else:
+                        print("fizz")
+    """
+    class Flag():
+        def __init__(self,parent,*flags):
+            self.parent = parent
+            self.flags = flags
+        def __enter__(self):
+            self.parent.register(self)
+        def __exit__(self,*exc):
+            self.parent.unregister(self)
+
+    def __init__(self, validflags = None):
+        self.flags = []
+        self.validflags = validflags
+
+    def __getitem__(self,flagname):
+        for flag in self.flags:
+            if flagname in flag.flags: return True
+        return False
+
+    def register(self, flag):
+        self.flags.append(flag)
+    def unregister(self,flag):
+        self.flags.remove(flag)
+    def __call__(self, *flags):
+        if self.validflags:
+            invalids = [flag for flag in flags if flag not in self.validflags]
+            if invalids: raise ValueError(f"Invalid flags: {', '.join(invalids)}")
+        return ContextFlag.Flag(self,*flags)
+
 class DurationDelta(datetime.timedelta):
     """ A version of datetime.timedelta adapted for strftime functions """
     """ TODO """

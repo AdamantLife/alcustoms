@@ -392,6 +392,16 @@ def unitconversion_decorator_factory(conversion_function):
         A general docstring for the generated decorator is provided with it.
     """
     def converter(arg = None, callback = None):
+        f"""If provided, arg is the decorated function's argument index, name,
+        or a list of such to convert If omitted, arg will be 0 (the first argument).
+        
+        If callback is provided, it will be checked for a Truthy value before
+        the conversion is made; if it evaluates Falsey, the conversion will not
+        be made. callback can be a callable or a persistent value (a Falsey value
+        for callable means that a conversion will never take place).
+
+        This function uses {conversion_function} and does not inspect that the argument(s)
+        value is valid."""
         if arg and not isinstance(arg,(int,str, list, tuple)):
             raise TypeError("Invalid arg type: should be an Integer or String if provided")
         ### Uniform arg
@@ -410,17 +420,6 @@ def unitconversion_decorator_factory(conversion_function):
                 if isinstance(a,int): a = list(bargs.arguments)[a]
                 bargs.arguments[a] = conversion_function(bargs.arguments[a])
         return signature_decorator_factory(checkupdate)
-    ## https://bugs.python.org/issue28739 (f-strings cannot be docstrings)
-    converter.__doc__ = f"""If provided, arg is the decorated function's argument index, name,
-        or a list of such to convert If omitted, arg will be 0 (the first argument).
-        
-        If callback is provided, it will be checked for a Truthy value before
-        the conversion is made; if it evaluates Falsey, the conversion will not
-        be made. callback can be a callable or a persistent value (a Falsey value
-        for callable means that a conversion will never take place).
-
-        This function uses {conversion_function} and does not inspect that the argument(s)
-        value is valid."""
     return converter
 
 def dynamic_defaults(**kw):
@@ -476,4 +475,53 @@ def dynamic_defaults(**kw):
         ba.apply_defaults()
     return SignatureDecorator.factory(update, apply_defaults = False, apply_self = True, ondecoration = ondecoration)
             
+def defaultproperty(func):
+    """ Convenience function which returns a property decorator which
+        manages a variable alongside the decorated function: when the
+        variable is set, the set value is returned by the getter;
+        when it is not set, the function result is returned instead.
+        The setter and deleter are generated automatically.
 
+        When setting the property, the variable name is stored on the
+        object as "_"+property_name and the value is set as-is; in other
+        words, setting the property to a different function will not
+        change the default function and will return the function object
+        without calling it.
+        
+        To clear the variable, use "del".
+
+        Example usage:
+
+            MyClass():
+                @defaultproperty
+                def x():
+                    return 22/7
+
+            foo = MyClass()
+            foo.x
+            >>> 3.142857142857143
+            
+            foo.x = (1+5**.5)/2
+            foo.x
+            >>> 1.618033988749895
+
+            del x
+            foo.x
+            >>> 3.142857142857143
+        """
+    name = func.__name__
+    varname = "_"+name
+    
+
+    def setter(self,value):
+        setattr(self,varname,value)
+
+    def deleter(self):
+        delattr(self,varname)
+
+    @functools.wraps(func)
+    def inner(self,*args,**kw):
+        try: return getattr(self,varname)
+        except AttributeError: return func(self,*args,**kw)
+
+    return property(fget = inner, fset = setter, fdel = deleter)

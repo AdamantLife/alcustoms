@@ -205,6 +205,51 @@ class UnitConversion_DFCase(unittest.TestCase):
                 self.assertIsInstance(b,float)
 
 
+defaultproperty = decorators.defaultproperty
+class defaultpropertyCase(unittest.TestCase):
+    """ TestCase for the defaultproperty decorator. """
+    def test_exampleusage(self):
+        """ Tests that the example usage is accurate """
+        class MyClass():
+            @defaultproperty
+            def x(self):
+                return 22/7
+
+        a = MyClass()
+        self.assertEqual(a.x,3.142857142857143)
+        a.x = (1+5**.5)/2
+        self.assertEqual(a.x,1.618033988749895)
+        del a.x
+        self.assertEqual(a.x,3.142857142857143)
+
+    def test_variablesetting(self):
+        """ Tests the background variable is managed appropriately """
+        class MyClass():
+            @defaultproperty
+            def x(self):
+                return 4
+
+        a = MyClass()
+
+        def isset():
+            try: a._x
+            except AttributeError: return False
+            return True
+
+        self.assertFalse(isset())
+        a.x = "Hello"
+        self.assertTrue(isset())
+        ## Bonus Test: None !== Not Set
+        a.x = None
+        self.assertEqual(a.x,None)
+        self.assertTrue(isset())
+        del a.x
+        self.assertFalse(isset())
+        
+
+
+
+
 
 if __name__ == "__main__":
     unittest.main()

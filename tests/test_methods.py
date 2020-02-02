@@ -203,5 +203,38 @@ class TimerCase(unittest.TestCase):
         self.assertEqual(timer.duration_dict("%S"),dict(seconds=5))
         self.assertEqual(timer.duration(),"0:0:5")
 
+ContextFlag = methods.ContextFlag
+class ContextFlagCase(unittest.TestCase):
+    def test_basic(self):
+        flags = ContextFlag()
+        
+        def layer1():
+            if flags['foo']:
+                with flags("bar"):
+                    return layer2()
+            return layer2()
+        def layer2():
+            if flags['bar']:
+                return "fizz"
+            return "buzz"
+
+        self.assertEqual(flags.flags,[])
+
+        self.assertEqual(layer1(),"buzz")
+        self.assertEqual(flags.flags,[])
+
+        with flags("foo"):
+            self.assertTrue(flags['foo'])
+            self.assertEqual(layer1(), "fizz")
+
+        self.assertEqual(flags.flags,[])
+        self.assertEqual(layer2(), "buzz")
+
+        with flags("bar"):
+            self.assertTrue(flags['bar'])
+            self.assertEqual(layer2(),"fizz")
+
+        self.assertEqual(flags.flags,[])
+
 if __name__ == "__main__":
     unittest.main()

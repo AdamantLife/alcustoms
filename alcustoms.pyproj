@@ -101,6 +101,9 @@
     <Compile Include="gaming\dice\__init__.py" />
     <Compile Include="gaming\util.py" />
     <Compile Include="gaming\__init__.py" />
+    <Compile Include="gears.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="graphql_query.py">
       <SubType>Code</SubType>
     </Compile>
@@ -147,9 +150,6 @@
     <Compile Include="Programs\SQLExplorer.py" />
     <Compile Include="Programs\sqlscratchpad.py" />
     <Compile Include="Programs\SymLinkUtility.py" />
-    <Compile Include="shell.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="spellingcorrector.py" />
     <Compile Include="sql\constants.py" />
     <Compile Include="sql\engine.py">

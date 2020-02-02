@@ -6,7 +6,6 @@
 import datetime
 import functools
 import hashlib
-import io
 import pathlib
 import pickle
 import shutil
@@ -14,9 +13,6 @@ import shutil
 ## Third-Party
 import requests
 import bs4
-
-## This Module
-from alcustoms.decorators import dynamic_defaults
 
 USERAGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36"
 
@@ -83,11 +79,17 @@ class CachedSession(requests.Session):
         """ Formats the headers dict into a string """
         return "&".join(f"{k}={v}" for k,v in prep.headers.items())
 
-def session_decorator_factory(_session_class = None, **options):
+def session_decorator_factory(**options):
     """ Returns a decorator that can be used to validate the session parameter and, if None, create a new session with the given options (per getbasicsession) """
-    if _session_class is None: _session_class = requests.Session
-    ## dynamic_defaults is a decorator that updates unbound arguments with a function call result or a value at execution time
-    return dynamic_defaults(session = lambda options = options: _session_class(**options))
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, session = None, **kw):
+            if session is None: session = getbasicsession(**options)
+            if not isinstance(session,requests.Session):
+                raise AttributeError("session must be requests.Session object")
+            return func(*args, session = session, **kw)
+        return wrapper
+    return decorator
 
 ## Default session decorator
 sessiondecorator = session_decorator_factory()
@@ -191,25 +193,15 @@ def response_to_soup(response, encoding = None, parser = "html.parser"):
     return bs4.BeautifulSoup(html, parser)
 
 def getrawimage(imgurl,session = None, headers = None):
-    """ Downloads the given image and returns a BytesIO object containing the raw response """
-    if session is None: session = requests.Session()
+    """ Downloads the given image into streaming requsts.response.raw data and then returns the reference """
     if not imgurl.startswith("http:") and not imgurl.startswith("https:"):
         imgurl = "https:"+imgurl
     resp = session.get(imgurl,headers=headers, stream = True)
     if resp.status_code == 200:
-        output = io.BytesIO()
-        if resp.raw is not None:
-           resp.raw.decode_content = True
-           shutil.copyfileobj(resp.raw,output)
-        ## This is for capatibility with CachedSession
-        else:
-            output.write(resp.content)
-        output.seek(0)
-
-        resp.close()
-        return output
+        resp.raw.decode_content = True
     else:
         resp.close()
+    return resp
 
 def downloadimage(imgurl,directory = None, session = None):
     ''' Downloads images
@@ -230,8 +222,13 @@ def downloadimage(imgurl,directory = None, session = None):
         if not directory.is_dir():
             raise ValueError("Invalid directory location")
     filepath = (directory / pathlib.Path(imgurl).name).resolve()
-    imgdata = getrawimage(imgurl,session=session)
+    response = getrawimage(imgurl,session=session)
+    imgdata = response.raw
     if imgdata:
         with open(filepath,'wb') as f:
             shutil.copyfileobj(imgdata, f)
-        return filepath
+    else:
+        response.close()
+        return None
+    response.close()
+    return filepath

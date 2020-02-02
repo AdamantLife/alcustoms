@@ -25,7 +25,3 @@ def parsechromeheaders(headerstring):
         out[research.group("key")] = research.group("value").strip()
 
     return out
-
-def matches_url(_string):
-    """ Returns whether a string matches typical URl protocol (https?://) """
-    return re.match("https?://",_string)
