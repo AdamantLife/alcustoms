@@ -204,6 +204,21 @@ class UnitConversion_DFCase(unittest.TestCase):
                 self.assertIsInstance(a,float)
                 self.assertIsInstance(b,float)
 
+class RequiresCase(unittest.TestCase):
+    def test_deco(self):
+        """Basic Tests for requires decorator """
+        ## Adapted from docs
+        class A():
+            def __init__(self, foo = None):
+                self.foo = foo
+            @decorators.requires("foo")
+            def bar(self):
+                return 'foobar%s' % self.foo
+
+        a = A()
+        self.assertRaisesRegexp(AttributeError, "A.foo is not set", a.bar)
+        a.foo = "baz"
+        self.assertEqual(a.bar(), "foobarbaz")
 
 defaultproperty = decorators.defaultproperty
 class defaultpropertyCase(unittest.TestCase):

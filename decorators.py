@@ -191,6 +191,38 @@ def outputmatcher(matchkey,self = False,missing = None):
         return decor
     return actualdecor
 
+def requires(attr):
+    """ A simple decorator which checks that the first argument of the decorated functions
+        has a non-None value for the given attribute. If it does not have the attribute or
+        the attribute is None, a AttributeError will be raised.
+
+        Example Usage:
+            class A():
+                def __init__(self, foo = None):
+                    self.foo = foo
+                @requires("foo")
+                def bar(self):
+                    return "foobar%s" % self.foo
+
+            >>> a = A()
+            >>> a.bar()
+            Traceback (most recent call last):
+            [...]
+            AttributeError: A.foo is not set
+            >>> a.foo = "baz"
+            >>> a.bar()
+            'foobarbaz'
+    """
+    def deco(func):
+        @functools.wraps(func)
+        def inner(*args,**kw):
+            if getattr(args[0],attr) is None:
+                raise AttributeError(f"{args[0].__class__.__name__}.{attr} is not set")
+            return func(*args,**kw)
+        return inner
+    return deco
+
+
 def signature_decorator_factory(*callbacks, apply_defaults = False):
     """ Creates a decorator which calls the given functions before applying the decorated function.
     
