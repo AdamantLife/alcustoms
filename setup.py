@@ -29,7 +29,7 @@ setuptools.setup(
         "openpyxl",
         "pillow",
         "requests",
-        "pywin32",
+        ## "pywin32",
         "python-hosts"
         ]
 )
