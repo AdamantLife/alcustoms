@@ -5,6 +5,8 @@
 *.suo
 *.user
 *.userosscache
+*.sln
+*.pyproj
 *.sln.docstates
 quick*
 *.storage
