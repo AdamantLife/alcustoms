@@ -19,4 +19,17 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.8',
+    install_requires=[
+        "bs4",
+        "flask",
+        "google",
+        "google-api-python-client",
+        "matplotlib",
+        "numpy",
+        "openpyxl",
+        "pillow",
+        "requests",
+        "pywin32",
+        "python-hosts"
+        ]
 )
