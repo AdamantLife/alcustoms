@@ -1,1 +1,0 @@
-from alcustoms.windows.desktop.systemtray import SysTrayIcon

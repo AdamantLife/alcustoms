@@ -22,303 +22,315 @@
   <ItemGroup>
     <Content Include=".gitattributes" />
     <Content Include=".gitignore" />
-    <Content Include="big.txt" />
+    <Content Include="alcustoms\big.txt" />
+    <Content Include="alcustoms\excel\tests\exceltests.json" />
+    <Content Include="alcustoms\excel\tests\testbook.xlsx" />
+    <Content Include="alcustoms\excel\tests\__pycache__\test_Coordinates.cpython-37.pyc" />
+    <Content Include="alcustoms\excel\tests\__pycache__\test_Ranges.cpython-37.pyc" />
+    <Content Include="alcustoms\excel\tests\__pycache__\test_Tables.cpython-37.pyc" />
+    <Content Include="alcustoms\excel\tests\__pycache__\__init__.cpython-37.pyc" />
+    <Content Include="alcustoms\excel\__pycache__\Coordinates.cpython-37.pyc" />
+    <Content Include="alcustoms\excel\__pycache__\Coordinates.cpython-38.pyc" />
+    <Content Include="alcustoms\excel\__pycache__\Ranges.cpython-37.pyc" />
+    <Content Include="alcustoms\excel\__pycache__\Ranges.cpython-38.pyc" />
+    <Content Include="alcustoms\excel\__pycache__\Tables.cpython-37.pyc" />
+    <Content Include="alcustoms\excel\__pycache__\Tables.cpython-38.pyc" />
+    <Content Include="alcustoms\excel\__pycache__\__init__.cpython-37.pyc" />
+    <Content Include="alcustoms\excel\__pycache__\__init__.cpython-38.pyc" />
+    <Content Include="alcustoms\math\tests\__pycache__\test_evaluator.cpython-38.pyc" />
+    <Content Include="alcustoms\math\__pycache__\evaluator.cpython-38.pyc" />
+    <Content Include="alcustoms\math\__pycache__\trig.cpython-38.pyc" />
+    <Content Include="alcustoms\math\__pycache__\__init__.cpython-38.pyc" />
+    <Content Include="alcustoms\NOSql\tests\test.aldb" />
+    <Content Include="alcustoms\Programs\README.md" />
+    <Content Include="alcustoms\Programs\temp" />
+    <Content Include="alcustoms\Programs\tempdb.db" />
+    <Content Include="alcustoms\sql\objects\__pycache__\Connection.cpython-37.pyc" />
+    <Content Include="alcustoms\sql\objects\__pycache__\graphdb.cpython-37.pyc" />
+    <Content Include="alcustoms\sql\objects\__pycache__\Table.cpython-37.pyc" />
+    <Content Include="alcustoms\sql\objects\__pycache__\Utilities.cpython-37.pyc" />
+    <Content Include="alcustoms\sql\objects\__pycache__\versioning.cpython-37.pyc" />
+    <Content Include="alcustoms\sql\objects\__pycache__\View.cpython-37.pyc" />
+    <Content Include="alcustoms\sql\objects\__pycache__\__init__.cpython-37.pyc" />
+    <Content Include="alcustoms\sql\tests\.vs\slnx.sqlite" />
+    <Content Include="alcustoms\sql\tests\.vs\VSWorkspaceState.json" />
+    <Content Include="alcustoms\sql\tests\objects\graphdb_populateedge.png" />
+    <Content Include="alcustoms\sql\tests\objects\__pycache__\test_Connection.cpython-37.pyc" />
+    <Content Include="alcustoms\sql\tests\objects\__pycache__\test_graphdb.cpython-37.pyc" />
+    <Content Include="alcustoms\sql\tests\objects\__pycache__\test_Table.cpython-37.pyc" />
+    <Content Include="alcustoms\sql\tests\objects\__pycache__\test_utilities.cpython-37.pyc" />
+    <Content Include="alcustoms\sql\tests\objects\__pycache__\test_versioning.cpython-37.pyc" />
+    <Content Include="alcustoms\sql\tests\objects\__pycache__\__init__.cpython-37.pyc" />
+    <Content Include="alcustoms\sql\tests\parser_samples.txt" />
+    <Content Include="alcustoms\sql\tests\sqltests tables.xlsx" />
+    <Content Include="alcustoms\sql\tests\test.aldb" />
+    <Content Include="alcustoms\sql\tests\testtables.json" />
+    <Content Include="alcustoms\sql\tests\__pycache__\test_newparser.cpython-37.pyc" />
+    <Content Include="alcustoms\sql\tests\__pycache__\test_sql.cpython-37.pyc" />
+    <Content Include="alcustoms\sql\tests\__pycache__\utils.cpython-37.pyc" />
+    <Content Include="alcustoms\sql\tests\__pycache__\__init__.cpython-37.pyc" />
+    <Content Include="alcustoms\sql\__pycache__\constants.cpython-37.pyc" />
+    <Content Include="alcustoms\sql\__pycache__\newparser.cpython-37.pyc" />
+    <Content Include="alcustoms\sql\__pycache__\virtual.cpython-37.pyc" />
+    <Content Include="alcustoms\sql\__pycache__\__init__.cpython-37.pyc" />
+    <Content Include="alcustoms\tests\axmltest.xml" />
+    <Content Include="alcustoms\tests\axmltest2.xml" />
+    <Content Include="alcustoms\tests\webtest.html" />
+    <Content Include="alcustoms\tests\__pycache__\test_alcustoms.cpython-37.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_alcustoms.cpython-38.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_complextags.cpython-37.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_complextags.cpython-38.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_decorators.cpython-37.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_decorators.cpython-38.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_delimparser.cpython-37.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_delimparser.cpython-38.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_excel.cpython-37.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_measurement.cpython-37.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_measurement.cpython-38.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_measurment.cpython-37.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_methods.cpython-37.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_methods.cpython-38.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_nestparser.cpython-37.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_nestparser.cpython-38.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_subclasses.cpython-37.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_subclasses.cpython-38.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_texttable.cpython-37.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_version.cpython-37.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_version.cpython-38.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_web.cpython-37.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_windows.cpython-37.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\test_windows.cpython-38.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\__init__.cpython-37.pyc" />
+    <Content Include="alcustoms\tests\__pycache__\__init__.cpython-38.pyc" />
+    <Content Include="alcustoms\text\__pycache__\texttable.cpython-37.pyc" />
+    <Content Include="alcustoms\text\__pycache__\texttable.cpython-38.pyc" />
+    <Content Include="alcustoms\text\__pycache__\textwrapper.cpython-37.pyc" />
+    <Content Include="alcustoms\text\__pycache__\textwrapper.cpython-38.pyc" />
+    <Content Include="alcustoms\text\__pycache__\__init__.cpython-37.pyc" />
+    <Content Include="alcustoms\text\__pycache__\__init__.cpython-38.pyc" />
+    <Content Include="alcustoms\tkinter\images\07 Open Treasure Box.wav" />
+    <Content Include="alcustoms\tkinter\images\allogo.png" />
+    <Content Include="alcustoms\tkinter\images\buttoncover.png" />
+    <Content Include="alcustoms\tkinter\images\buttoncover.xcf" />
+    <Content Include="alcustoms\tkinter\images\dice.png" />
+    <Content Include="alcustoms\tkinter\images\dragon.png" />
+    <Content Include="alcustoms\tkinter\images\equation.png" />
+    <Content Include="alcustoms\tkinter\images\Final Fantasy %287%29 - Victory Fanfare.wav" />
+    <Content Include="alcustoms\tkinter\images\gnoll.png" />
+    <Content Include="alcustoms\tkinter\images\left.png" />
+    <Content Include="alcustoms\tkinter\images\NavTop.png" />
+    <Content Include="alcustoms\tkinter\images\noimages.png" />
+    <Content Include="alcustoms\tkinter\images\rawdragon.png" />
+    <Content Include="alcustoms\tkinter\images\rawgnoll.png" />
+    <Content Include="alcustoms\tkinter\images\right.png" />
+    <Content Include="alcustoms\tkinter\images\shield.png" />
+    <Content Include="alcustoms\tkinter\images\surface.png" />
+    <Content Include="alcustoms\tkinter\images\sword.png" />
+    <Content Include="alcustoms\tkinter\images\swordnshield.png" />
+    <Content Include="alcustoms\tkinter\images\tabactive - Copy.png" />
+    <Content Include="alcustoms\tkinter\images\tabactive.png" />
+    <Content Include="alcustoms\tkinter\images\tabinactive - Copy.png" />
+    <Content Include="alcustoms\tkinter\images\tabinactive.png" />
+    <Content Include="alcustoms\tkinter\images\taboverlay.xcf" />
+    <Content Include="alcustoms\tkinter\images\tabsurface.png" />
+    <Content Include="alcustoms\tkinter\images\tabsurface.xcf" />
+    <Content Include="alcustoms\tkinter\to convert\stats2.png" />
+    <Content Include="alcustoms\tkinter\__pycache__\advancedtkinter.cpython-37.pyc" />
+    <Content Include="alcustoms\tkinter\__pycache__\advancedtkinter.cpython-38.pyc" />
+    <Content Include="alcustoms\tkinter\__pycache__\smarttkinter.cpython-37.pyc" />
+    <Content Include="alcustoms\tkinter\__pycache__\smarttkinter.cpython-38.pyc" />
+    <Content Include="alcustoms\tkinter\__pycache__\smartttk.cpython-37.pyc" />
+    <Content Include="alcustoms\tkinter\__pycache__\smartttk.cpython-38.pyc" />
+    <Content Include="alcustoms\tkinter\__pycache__\style.cpython-37.pyc" />
+    <Content Include="alcustoms\tkinter\__pycache__\style.cpython-38.pyc" />
+    <Content Include="alcustoms\tkinter\__pycache__\__init__.cpython-37.pyc" />
+    <Content Include="alcustoms\tkinter\__pycache__\__init__.cpython-38.pyc" />
+    <Content Include="alcustoms\web\tests\__pycache__\test_bs4.cpython-37.pyc" />
+    <Content Include="alcustoms\web\__pycache__\bs4.cpython-37.pyc" />
+    <Content Include="alcustoms\web\__pycache__\requests.cpython-38.pyc" />
+    <Content Include="alcustoms\web\__pycache__\__init__.cpython-37.pyc" />
+    <Content Include="alcustoms\web\__pycache__\__init__.cpython-38.pyc" />
+    <Content Include="alcustoms\windows\desktop\__pycache__\systemtray.cpython-37.pyc" />
+    <Content Include="alcustoms\windows\desktop\__pycache__\systemtray.cpython-38.pyc" />
+    <Content Include="alcustoms\windows\desktop\__pycache__\__init__.cpython-37.pyc" />
+    <Content Include="alcustoms\windows\desktop\__pycache__\__init__.cpython-38.pyc" />
+    <Content Include="alcustoms\windows\__pycache__\networking.cpython-37.pyc" />
+    <Content Include="alcustoms\windows\__pycache__\networking.cpython-38.pyc" />
+    <Content Include="alcustoms\windows\__pycache__\__init__.cpython-37.pyc" />
+    <Content Include="alcustoms\windows\__pycache__\__init__.cpython-38.pyc" />
+    <Content Include="alcustoms\words.txt" />
     <Content Include="LICENSE" />
-    <Content Include="Programs\README.md" />
+    <Content Include="README.md" />
     <Content Include="requirements.txt" />
-    <Content Include="sql\objects\__pycache__\Connection.cpython-36.pyc" />
-    <Content Include="sql\objects\__pycache__\Table.cpython-36.pyc" />
-    <Content Include="sql\objects\__pycache__\View.cpython-36.pyc" />
-    <Content Include="sql\objects\__pycache__\__init__.cpython-36.pyc" />
-    <Content Include="sql\tests\parser_samples.txt" />
-    <Content Include="excel\tests\exceltests.json" />
-    <Content Include="tkinter\images\allogo.png" />
-    <Content Include="tkinter\images\buttoncover.png" />
-    <Content Include="tkinter\images\dice.png" />
-    <Content Include="tkinter\images\dragon.png" />
-    <Content Include="tkinter\images\equation.png" />
-    <Content Include="tkinter\images\gnoll.png" />
-    <Content Include="tkinter\images\left.png" />
-    <Content Include="tkinter\images\NavTop.png" />
-    <Content Include="tkinter\images\noimages.png" />
-    <Content Include="tkinter\images\rawdragon.png" />
-    <Content Include="tkinter\images\rawgnoll.png" />
-    <Content Include="tkinter\images\right.png" />
-    <Content Include="tkinter\images\shield.png" />
-    <Content Include="tkinter\images\surface.png" />
-    <Content Include="tkinter\images\sword.png" />
-    <Content Include="tkinter\images\swordnshield.png" />
-    <Content Include="tkinter\images\tabactive - Copy.png" />
-    <Content Include="tkinter\images\tabactive.png" />
-    <Content Include="tkinter\images\tabinactive - Copy.png" />
-    <Content Include="tkinter\images\tabinactive.png" />
-    <Content Include="tkinter\images\tabsurface.png" />
-    <Content Include="tkinter\to convert\stats2.png" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="albox.py" />
-    <Compile Include="alconstants.py" />
-    <Compile Include="axml.py" />
-    <Compile Include="complextags.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="constants.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="decorators.py" />
-    <Compile Include="delimparser.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="directoryinfo.py" />
-    <Compile Include="emailer.py" />
-    <Compile Include="excel\Coordinates.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="excel\Ranges.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="excel\Tables.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="excel\tests\test_Coordinates.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="excel\tests\test_Ranges.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="excel\tests\test_Tables.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="excel\tests\__init__.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="excel\__init__.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="filemodules.py" />
-    <Compile Include="flask.py" />
-    <Compile Include="gaming\dice\regexdice.py" />
-    <Compile Include="gaming\dice\__init__.py" />
-    <Compile Include="gaming\util.py" />
-    <Compile Include="gaming\__init__.py" />
-    <Compile Include="gears.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="graphql_query.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="gtk\mvc.py" />
-    <Compile Include="gtk\__init__.py" />
-    <Compile Include="images.py" />
-    <Compile Include="inspection.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="math\evaluator.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="math\tests\test_evaluator.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="math\tests\__init__.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="math\__init__.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="measurement.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="messenger.py" />
-    <Compile Include="methods.py" />
-    <Compile Include="mvc.py" />
-    <Compile Include="nestparser.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="NOSql\objects.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="NoSql\tests\test_core.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="NoSql\tests\__init__.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="NOSql\__init__.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Programs\FileNameRemover.py" />
-    <Compile Include="Programs\SQLExplorer.py" />
-    <Compile Include="Programs\sqlscratchpad.py" />
-    <Compile Include="Programs\SymLinkUtility.py" />
-    <Compile Include="spellingcorrector.py" />
-    <Compile Include="sql\constants.py" />
-    <Compile Include="sql\engine.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="sql\newparser.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="sql\objects\Connection.py" />
-    <Compile Include="sql\objects\graphdb.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="sql\objects\Table.py" />
-    <Compile Include="sql\objects\Utilities.py" />
-    <Compile Include="sql\objects\versioning.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="sql\objects\View.py" />
-    <Compile Include="sql\objects\__init__.py" />
-    <Compile Include="sql\tests\objects\test_Connection.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="sql\tests\objects\test_graphdb.py" />
-    <Compile Include="sql\tests\objects\test_Table.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="sql\tests\objects\test_utilities.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="sql\tests\objects\test_versioning.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="sql\tests\objects\__init__.py" />
-    <Compile Include="tests\test_decorators.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="tests\test_alcustoms.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="tests\test_complextags.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="sql\tests\utils.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="sql\tests\__init__.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="sql\virtual.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="sql\__init__.py" />
-    <Compile Include="subclasses.py" />
-    <Compile Include="tests\graphql_querytests.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="tests\test_methods.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="tests\test_nestparser.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="sql\tests\test_sql.py" />
-    <Compile Include="sql\tests\test_newparser.py" />
-    <Compile Include="tests\test_subclasses.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="tests\test_delimparser.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="tests\test_measurement.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="text\tests\test_texttable.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="tests\test_version.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="tests\test_web.py" />
-    <Compile Include="tests\test_windows.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="tests\__init__.py" />
-    <Compile Include="text\tests\__init__.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="text\texttable.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="text\textwrapper.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="text\__init__.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="tkinter\adanotebook.py" />
-    <Compile Include="tkinter\adaptedcanvas.py" />
-    <Compile Include="tkinter\adaptedlistbox.py" />
-    <Compile Include="tkinter\adaptedtoplevel.py" />
-    <Compile Include="tkinter\advancedtkinter.py" />
-    <Compile Include="tkinter\autocompleteentry.py" />
-    <Compile Include="tkinter\autocompletetext.py" />
-    <Compile Include="tkinter\collapsibleframe-edited.py" />
-    <Compile Include="tkinter\collapsibleframe.py" />
-    <Compile Include="tkinter\colorpicker.py" />
-    <Compile Include="tkinter\horizontalscrolledframe.py" />
-    <Compile Include="tkinter\smarttkinter.py" />
-    <Compile Include="tkinter\smartttk.py" />
-    <Compile Include="tkinter\style.py" />
-    <Compile Include="tkinter\tkinterimagemods.py" />
-    <Compile Include="tkinter\tkintersprites.py" />
-    <Compile Include="tkinter\widgets.py" />
-    <Compile Include="tkinter\__init__.py" />
-    <Compile Include="math\trig.py" />
-    <Compile Include="web\bs4.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="web\requests.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="web\urllib.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="web\__init__.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="windows\desktop\systemtray.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="windows\desktop\__init__.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="windows\networking.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="windows\__init__.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="winregistry.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="__init__.py" />
+    <Folder Include="alcustoms\" />
+    <Folder Include="alcustoms\excel\" />
+    <Folder Include="alcustoms\excel\tests\" />
+    <Folder Include="alcustoms\excel\tests\__pycache__\" />
+    <Folder Include="alcustoms\excel\__pycache__\" />
+    <Folder Include="alcustoms\gaming\" />
+    <Folder Include="alcustoms\gaming\dice\" />
+    <Folder Include="alcustoms\gtk\" />
+    <Folder Include="alcustoms\math\" />
+    <Folder Include="alcustoms\math\tests\" />
+    <Folder Include="alcustoms\math\tests\__pycache__\" />
+    <Folder Include="alcustoms\math\__pycache__\" />
+    <Folder Include="alcustoms\NOSql\" />
+    <Folder Include="alcustoms\NOSql\tests\" />
+    <Folder Include="alcustoms\Programs\" />
+    <Folder Include="alcustoms\sql\" />
+    <Folder Include="alcustoms\sql\objects\" />
+    <Folder Include="alcustoms\sql\objects\__pycache__\" />
+    <Folder Include="alcustoms\sql\tests\" />
+    <Folder Include="alcustoms\sql\tests\.vs\" />
+    <Folder Include="alcustoms\sql\tests\.vs\tests\" />
+    <Folder Include="alcustoms\sql\tests\.vs\tests\v16\" />
+    <Folder Include="alcustoms\sql\tests\objects\" />
+    <Folder Include="alcustoms\sql\tests\objects\__pycache__\" />
+    <Folder Include="alcustoms\sql\tests\__pycache__\" />
+    <Folder Include="alcustoms\sql\__pycache__\" />
+    <Folder Include="alcustoms\tests\" />
+    <Folder Include="alcustoms\tests\__pycache__\" />
+    <Folder Include="alcustoms\text\" />
+    <Folder Include="alcustoms\text\tests\" />
+    <Folder Include="alcustoms\text\__pycache__\" />
+    <Folder Include="alcustoms\tkinter\" />
+    <Folder Include="alcustoms\tkinter\images\" />
+    <Folder Include="alcustoms\tkinter\to convert\" />
+    <Folder Include="alcustoms\tkinter\__pycache__\" />
+    <Folder Include="alcustoms\web\" />
+    <Folder Include="alcustoms\web\tests\" />
+    <Folder Include="alcustoms\web\tests\__pycache__\" />
+    <Folder Include="alcustoms\web\__pycache__\" />
+    <Folder Include="alcustoms\windows\" />
+    <Folder Include="alcustoms\windows\desktop\" />
+    <Folder Include="alcustoms\windows\desktop\__pycache__\" />
+    <Folder Include="alcustoms\windows\__pycache__\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="excel\tests\" />
-    <Folder Include="gaming" />
-    <Folder Include="gaming\dice" />
-    <Folder Include="gtk" />
-    <Folder Include="excel\" />
-    <Folder Include="math\" />
-    <Folder Include="math\tests\" />
-    <Folder Include="text\" />
-    <Folder Include="text\tests\" />
-    <Folder Include="web\" />
-    <Folder Include="windows\" />
-    <Folder Include="NOSql\" />
-    <Folder Include="NOSql\tests\" />
-    <Folder Include="Programs\" />
-    <Folder Include="sql" />
-    <Folder Include="sql\tests\" />
-    <Folder Include="sql\objects\" />
-    <Folder Include="sql\objects\__pycache__\" />
-    <Folder Include="sql\tests\objects\" />
-    <Folder Include="tests" />
-    <Folder Include="tkinter" />
-    <Folder Include="tkinter\images" />
-    <Folder Include="tkinter\to convert" />
-    <Folder Include="windows\desktop\" />
+    <Compile Include="alcustoms\albox.py" />
+    <Compile Include="alcustoms\alconstants.py" />
+    <Compile Include="alcustoms\axml.py" />
+    <Compile Include="alcustoms\complextags.py" />
+    <Compile Include="alcustoms\constants.py" />
+    <Compile Include="alcustoms\decorators.py" />
+    <Compile Include="alcustoms\delimparser.py" />
+    <Compile Include="alcustoms\directoryinfo.py" />
+    <Compile Include="alcustoms\emailer.py" />
+    <Compile Include="alcustoms\excel\Coordinates.py" />
+    <Compile Include="alcustoms\excel\Ranges.py" />
+    <Compile Include="alcustoms\excel\Tables.py" />
+    <Compile Include="alcustoms\excel\tests\test_Coordinates.py" />
+    <Compile Include="alcustoms\excel\tests\test_Ranges.py" />
+    <Compile Include="alcustoms\excel\tests\test_Tables.py" />
+    <Compile Include="alcustoms\excel\tests\__init__.py" />
+    <Compile Include="alcustoms\excel\__init__.py" />
+    <Compile Include="alcustoms\filemodules.py" />
+    <Compile Include="alcustoms\flask.py" />
+    <Compile Include="alcustoms\gaming\dice\regexdice.py" />
+    <Compile Include="alcustoms\gaming\dice\__init__.py" />
+    <Compile Include="alcustoms\gaming\util.py" />
+    <Compile Include="alcustoms\gaming\__init__.py" />
+    <Compile Include="alcustoms\gears.py" />
+    <Compile Include="alcustoms\graphql_query.py" />
+    <Compile Include="alcustoms\gtk\mvc.py" />
+    <Compile Include="alcustoms\gtk\__init__.py" />
+    <Compile Include="alcustoms\images.py" />
+    <Compile Include="alcustoms\inspection.py" />
+    <Compile Include="alcustoms\math\evaluator.py" />
+    <Compile Include="alcustoms\math\tests\test_evaluator.py" />
+    <Compile Include="alcustoms\math\tests\__init__.py" />
+    <Compile Include="alcustoms\math\trig.py" />
+    <Compile Include="alcustoms\math\__init__.py" />
+    <Compile Include="alcustoms\measurement.py" />
+    <Compile Include="alcustoms\messenger.py" />
+    <Compile Include="alcustoms\methods.py" />
+    <Compile Include="alcustoms\mvc.py" />
+    <Compile Include="alcustoms\nestparser.py" />
+    <Compile Include="alcustoms\NOSql\objects.py" />
+    <Compile Include="alcustoms\NOSql\tests\test_core.py" />
+    <Compile Include="alcustoms\NOSql\tests\__init__.py" />
+    <Compile Include="alcustoms\NOSql\__init__.py" />
+    <Compile Include="alcustoms\Programs\FileNameRemover.py" />
+    <Compile Include="alcustoms\Programs\SQLExplorer.py" />
+    <Compile Include="alcustoms\Programs\sqlscratchpad.py" />
+    <Compile Include="alcustoms\Programs\SymLinkUtility.py" />
+    <Compile Include="alcustoms\spellingcorrector.py" />
+    <Compile Include="alcustoms\sql\constants.py" />
+    <Compile Include="alcustoms\sql\engine.py" />
+    <Compile Include="alcustoms\sql\newparser.py" />
+    <Compile Include="alcustoms\sql\objects\Connection.py" />
+    <Compile Include="alcustoms\sql\objects\graphdb.py" />
+    <Compile Include="alcustoms\sql\objects\Table.py" />
+    <Compile Include="alcustoms\sql\objects\Utilities.py" />
+    <Compile Include="alcustoms\sql\objects\versioning.py" />
+    <Compile Include="alcustoms\sql\objects\View.py" />
+    <Compile Include="alcustoms\sql\objects\__init__.py" />
+    <Compile Include="alcustoms\sql\tests\objects\test_Connection.py" />
+    <Compile Include="alcustoms\sql\tests\objects\test_graphdb.py" />
+    <Compile Include="alcustoms\sql\tests\objects\test_Table.py" />
+    <Compile Include="alcustoms\sql\tests\objects\test_utilities.py" />
+    <Compile Include="alcustoms\sql\tests\objects\test_versioning.py" />
+    <Compile Include="alcustoms\sql\tests\objects\__init__.py" />
+    <Compile Include="alcustoms\sql\tests\sqltest__depricated__.py" />
+    <Compile Include="alcustoms\sql\tests\test_newparser.py" />
+    <Compile Include="alcustoms\sql\tests\test_sql.py" />
+    <Compile Include="alcustoms\sql\tests\utils.py" />
+    <Compile Include="alcustoms\sql\tests\__init__.py" />
+    <Compile Include="alcustoms\sql\virtual.py" />
+    <Compile Include="alcustoms\sql\__init__.py" />
+    <Compile Include="alcustoms\subclasses.py" />
+    <Compile Include="alcustoms\tests\graphql_querytests.py" />
+    <Compile Include="alcustoms\tests\test_alcustoms.py" />
+    <Compile Include="alcustoms\tests\test_complextags.py" />
+    <Compile Include="alcustoms\tests\test_decorators.py" />
+    <Compile Include="alcustoms\tests\test_delimparser.py" />
+    <Compile Include="alcustoms\tests\test_measurement.py" />
+    <Compile Include="alcustoms\tests\test_methods.py" />
+    <Compile Include="alcustoms\tests\test_nestparser.py" />
+    <Compile Include="alcustoms\tests\test_subclasses.py" />
+    <Compile Include="alcustoms\tests\test_version.py" />
+    <Compile Include="alcustoms\tests\test_windows.py" />
+    <Compile Include="alcustoms\tests\__init__.py" />
+    <Compile Include="alcustoms\text\tests\test_texttable.py" />
+    <Compile Include="alcustoms\text\tests\__init__.py" />
+    <Compile Include="alcustoms\text\texttable.py" />
+    <Compile Include="alcustoms\text\textwrapper.py" />
+    <Compile Include="alcustoms\text\__init__.py" />
+    <Compile Include="alcustoms\tkinter\adanotebook.py" />
+    <Compile Include="alcustoms\tkinter\adaptedcanvas.py" />
+    <Compile Include="alcustoms\tkinter\adaptedlistbox.py" />
+    <Compile Include="alcustoms\tkinter\adaptedtoplevel.py" />
+    <Compile Include="alcustoms\tkinter\advancedtkinter.py" />
+    <Compile Include="alcustoms\tkinter\autocompleteentry.py" />
+    <Compile Include="alcustoms\tkinter\autocompletetext.py" />
+    <Compile Include="alcustoms\tkinter\collapsibleframe-edited.py" />
+    <Compile Include="alcustoms\tkinter\collapsibleframe.py" />
+    <Compile Include="alcustoms\tkinter\colorpicker.py" />
+    <Compile Include="alcustoms\tkinter\horizontalscrolledframe.py" />
+    <Compile Include="alcustoms\tkinter\smarttkinter.py" />
+    <Compile Include="alcustoms\tkinter\smartttk.py" />
+    <Compile Include="alcustoms\tkinter\style.py" />
+    <Compile Include="alcustoms\tkinter\tkinterimagemods.py" />
+    <Compile Include="alcustoms\tkinter\tkintersprites.py" />
+    <Compile Include="alcustoms\tkinter\widgets.py" />
+    <Compile Include="alcustoms\tkinter\__init__.py" />
+    <Compile Include="alcustoms\web\bs4.py" />
+    <Compile Include="alcustoms\web\requests.py" />
+    <Compile Include="alcustoms\web\tests\test_bs4.py" />
+    <Compile Include="alcustoms\web\tests\__init__.py" />
+    <Compile Include="alcustoms\web\urllib.py" />
+    <Compile Include="alcustoms\web\__init__.py" />
+    <Compile Include="alcustoms\windows\desktop\systemtray.py" />
+    <Compile Include="alcustoms\windows\desktop\__init__.py" />
+    <Compile Include="alcustoms\windows\networking.py" />
+    <Compile Include="alcustoms\windows\__init__.py" />
+    <Compile Include="alcustoms\winregistry.py" />
+    <Compile Include="alcustoms\__init__.py" />
+    <Compile Include="setup.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>
