@@ -1,1 +1,0 @@
-This directory contains a series of tkinter-based Utility Programs.
