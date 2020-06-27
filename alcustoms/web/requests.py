@@ -85,7 +85,7 @@ class CachedSession(requests.Session):
 def session_decorator_factory(**options):
     """ Returns a decorator that can be used to validate the session parameter and, if session is not supplied, creates a new session with the given options (per getbasicsession) """
     def callback(bargs):
-        if session not in bargs.arguments:
+        if "session" not in bargs.arguments:
             bargs.arguments['session'] = getbasicsession(**options)
         elif not isinstance(bargs.arguments['session'],requests.Session):
             raise AttributeError("session must be requests.Session object")
