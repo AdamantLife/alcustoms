@@ -257,8 +257,8 @@ def signature_decorator_factory(*callbacks, apply_defaults = False):
         > 123456789
 
 
-        Note that this example, being a common occurence, can be more easily implemented
-        using the dynamic_defaults function below which extends SignatureDecorator.factory.
+        Note that this example can be more easily implemented using the dynamic_defaults
+        function below which extends SignatureDecorator.factory.
     """
     def decorator(func):
         sig = inspect.signature(func)

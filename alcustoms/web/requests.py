@@ -10,6 +10,9 @@ import pathlib
 import pickle
 import shutil
 
+## Parent module
+from alcustoms import decorators
+
 ## Third-Party
 import requests
 import bs4
@@ -80,16 +83,14 @@ class CachedSession(requests.Session):
         return "&".join(f"{k}={v}" for k,v in prep.headers.items())
 
 def session_decorator_factory(**options):
-    """ Returns a decorator that can be used to validate the session parameter and, if None, create a new session with the given options (per getbasicsession) """
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, session = None, **kw):
-            if session is None: session = getbasicsession(**options)
-            if not isinstance(session,requests.Session):
-                raise AttributeError("session must be requests.Session object")
-            return func(*args, session = session, **kw)
-        return wrapper
-    return decorator
+    """ Returns a decorator that can be used to validate the session parameter and, if session is not supplied, creates a new session with the given options (per getbasicsession) """
+    def callback(bargs):
+        if session not in bargs.arguments:
+            bargs.arguments['session'] = getbasicsession(**options)
+        elif not isinstance(bargs.arguments['session'],requests.Session):
+            raise AttributeError("session must be requests.Session object")
+    return decorators.signature_decorator_factory(callback)
+    
 
 ## Default session decorator
 sessiondecorator = session_decorator_factory()
