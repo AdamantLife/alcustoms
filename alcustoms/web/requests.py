@@ -87,8 +87,8 @@ def session_decorator_factory(**options):
     def callback(bargs):
         if "session" not in bargs.arguments:
             bargs.arguments['session'] = getbasicsession(**options)
-        elif not isinstance(bargs.arguments['session'],requests.Session):
-            raise AttributeError("session must be requests.Session object")
+        elif (session:=bargs.arguments['session']) and not isinstance(session,requests.Session):
+            raise AttributeError(f"session must be requests.Session object, not {session.__class__.__name__}")
     return decorators.signature_decorator_factory(callback)
     
 
