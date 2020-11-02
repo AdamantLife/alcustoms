@@ -11,7 +11,7 @@ import pickle
 import shutil
 
 ## Parent module
-from alcustoms import decorators
+import al_decorators
 
 ## Third-Party
 import requests
@@ -89,7 +89,7 @@ def session_decorator_factory(**options):
             bargs.arguments['session'] = getbasicsession(**options)
         elif (session:=bargs.arguments['session']) and not isinstance(session,requests.Session):
             raise AttributeError(f"session must be requests.Session object, not {session.__class__.__name__}")
-    return decorators.signature_decorator_factory(callback)
+    return al_decorators.signature_decorator_factory(callback)
     
 
 ## Default session decorator

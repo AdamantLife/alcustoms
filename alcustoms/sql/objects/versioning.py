@@ -1,7 +1,7 @@
 """ alcustoms.sql.objects.versioning
 
     Versioning framework for alcustoms.sql.Database objects.
-    Uses the DotVersion class from alcustoms.methods to parse version numbers.
+    Uses the DotVersion module (previously a class in alcustoms.methods) to parse version numbers.
 
     Example Usage:
 
@@ -38,7 +38,7 @@
 from .Connection import *
 from alcustoms.sql import Table, advancedrow_factory, TableExistsError
 from .Utilities import temp_row_factory
-from alcustoms.methods import DotVersion
+from DotVersion import DotVersion
 
 VERSIONTABLE = "_versions"
 
