@@ -30,6 +30,7 @@ setuptools.setup(
         "pillow",
         "requests",
         ## "pywin32",
-        "python-hosts"
+        "python-hosts",
+        "al-decorators @ git+https://github.com/AdamantLife/AL_Decorators"
         ]
 )

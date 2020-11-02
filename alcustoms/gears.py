@@ -23,7 +23,7 @@ from functools import wraps
 ## This Package
 from alcustoms.math import trig
 from alcustoms.methods import ContextFlag
-from alcustoms.decorators import defaultproperty
+from al_decorators import defaultproperty
 
 
 def lockattr(func):
