@@ -89,7 +89,9 @@ def session_decorator_factory(**options):
             bargs.arguments['session'] = getbasicsession(**options)
         elif (session:=bargs.arguments['session']) and not isinstance(session,requests.Session):
             raise AttributeError(f"session must be requests.Session object, not {session.__class__.__name__}")
+
     return al_decorators.signature_decorator_factory(callback)
+
     
 
 ## Default session decorator
