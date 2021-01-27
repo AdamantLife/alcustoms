@@ -38,15 +38,23 @@ class TableTests(unittest.TestCase):
         for worksheetname in self.workbook.sheetnames:
             worksheet = self.workbook[worksheetname]
             with self.subTest(worksheet = worksheet):
+                ## New version of worksheet._tables is a dict subclass
+                if isinstance(worksheet._tables, dict): tables = list(worksheet._tables.values())
+                else: tables = list(worksheet._tables)
+
                 ##                               All Tables are Tables                          but not EnhancedTable (Subclass)
-                self.assertTrue(all(isinstance(table,openpyxl.worksheet.table.Table) and not isinstance(table,Tables.EnhancedTable) for table in worksheet._tables))
+                self.assertTrue(all(isinstance(table,openpyxl.worksheet.table.Table) and not isinstance(table,Tables.EnhancedTable) for table in tables))
 
         Tables.get_all_tables(self.workbook)
 
         for worksheetname in self.workbook.sheetnames:
             worksheet = self.workbook[worksheetname]
             with self.subTest(worksheet = worksheet):
-                self.assertTrue(all(isinstance(table,Tables.EnhancedTable) for table in worksheet._tables))
+                ## New version of worksheet._tables is a dict subclass
+                if isinstance(worksheet._tables, dict): tables = list(worksheet._tables.values())
+                else: tables = list(worksheet._tables)
+
+                self.assertTrue(all(isinstance(table,Tables.EnhancedTable) for table in tables))
 
 class EnhancedTableTests(unittest.TestCase):
     def setUp(self):
@@ -111,6 +119,41 @@ class MethodCase(unittest.TestCase):
         sheet = self.sheet_Tables3
         r1,c1 = 2,3
         self.assertEqual(Tables.gettablesize(sheet,c1,r1),"C2:F15")
+
+    def test_gettablesize_blank_columns(self):
+        """ Tests gettablesize with blank columns """
+        tests.basicsetup(self)
+        sheet = self.sheet_Tables4
+        r1, c1 = 1,1
+        for (greedycolumns,result) in [(1,"A1:C3"),(2, "A1:G3")]:
+            with self.subTest(greedycolumns = greedycolumns, result = result):
+                self.assertEqual(Tables.gettablesize(sheet, c1, r1, greedycolumns=greedycolumns), result)
+
+    def test_gettablesize_blank_rows(self):
+        """ Tests gettablesize with blank rows """
+        tests.basicsetup(self)
+        sheet = self.sheet_Tables4
+        r1, c1 = 1,11
+        for (greedyrows,result) in [(1,"K1:N4"),(2, "K1:N7")]:
+            with self.subTest(greedyrows = greedyrows, result = result):
+                self.assertEqual(Tables.gettablesize(sheet, c1, r1, greedyrows=greedyrows), result)
+
+    def test_gettablesize_notable(self):
+        """ Tests that gettablesize on a blank row/column results in None"""
+        tests.basicsetup(self)
+        ## This uses the blank space between the two greedy table tests
+        sheet = self.sheet_Tables4
+        r1, c1 = 1,10
+        self.assertIsNone(Tables.gettablesize(sheet, c1, r1))
+
+    def test_gettablesize_singlecolumn(self):
+        """ Tests that single column tables work """
+        tests.basicsetup(self)
+        ## This uses the first column of the greedycolumn table
+        sheet = self.sheet_Tables4
+        r1,c1 = 1,1
+        self.assertEqual(Tables.gettablesize(sheet, c1, r1), "A1:A3")
+
 
     def test_get_table_by_name(self):
         """ Basic Tests for get_table_by_name """
