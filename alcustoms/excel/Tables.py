@@ -18,14 +18,25 @@ __all__ = ["EnhancedTable",]
 class EnhancedTable(Table):
     """ A better Table Class, returned by get_all_tables """
     def from_table(table,worksheet):
-        ## NOTE! It seems that Initializing a Table object (which EnhancedTable is a subclass of) automatically adds the table to the Worksheet's _tables list
-        ## This means that we have to check and remove the original Table object, and should return any pre-built EnhancedTable we find.
-        oldtables = [tab for tab in worksheet._tables if tab == table]
-        for tab in oldtables:
-            ## Don't bother making a new one
-            if isinstance(tab,EnhancedTable): return tab
-            ## Remove the old-style one
-            else: worksheet._tables.remove(tab)
+        def oldversion():
+            ## NOTE! It seems that Initializing a Table object (which EnhancedTable is a subclass of) automatically adds the table to the Worksheet's _tables list
+            ## This means that we have to check and remove the original Table object, and should return any pre-built EnhancedTable we find.
+            oldtables = [tab for tab in worksheet._tables if tab == table]
+            for tab in oldtables:
+                ## Don't bother making a new one
+                if isinstance(tab,EnhancedTable): return tab
+                ## Remove the old-style one
+                else:
+                    worksheet._tables.remove(tab)
+        def newversion():
+            if table.name in worksheet._tables:
+                if isinstance((ntable := worksheet._tables[table.name]), EnhancedTable):
+                    return ntable
+                del worksheet._tables[table.name]
+
+        ## New version of openpyxl changes worksheet._tables to a dict subclass
+        if isinstance(worksheet._tables, dict): newversion()
+        else: oldversion()
         ## If no EnhancedTable version found, create one (which- again- seems to automatically be added to the _tables list)
         return EnhancedTable(worksheet = worksheet,
                              id=table.id, displayName=table.displayName, ref=table.ref, name=table.name, comment=table.comment, tableType=table.tableType,
@@ -106,8 +117,11 @@ def get_all_tables(workbook):
         worksheet = workbook[worksheetname]
         ## To ensure list integrity, we'll have to copy the list
         ## (Initiating Tables seems to automatically add them to _tables list)
-        tables = list(workbook[worksheetname]._tables)
+        tables = list(worksheet._tables)
         for table in tables:
+            ## New version of openpyxl changes worksheet._tables to a dict subclass
+            if isinstance(table, str):
+                table = worksheet._tables[table]
             ## Check if it was pre-converted and return it if so
             if isinstance(table,EnhancedTable):
                 out.append((worksheet,table))
@@ -136,9 +150,17 @@ def get_table_by_name(source,name):
         sheets = [source,]
     results = []
     for worksheet in sheets:
-        for table in worksheet._tables:
-            if table.displayName == name:
-                results.append((worksheet,table))
+        ## New version of openpyxl changes ._tables to a dict subclass
+        if isinstance(worksheet._tables, dict):
+            if name in worksheet._tables:
+                results.append((worksheet, worksheet._tables[name]))
+        ## Old version was a list
+        else:
+            for table in worksheet._tables:
+                if table.displayName == name:
+                    results.append((worksheet,table))
+    if len(results) == 0:
+        return None
     if len(results) > 1:
         raise ValueError(f'Got multiple values for "{name}"')
     sheet,table = results[0]
@@ -245,7 +267,7 @@ def dicts_to_table(sheet, dinput, tablename = None, start = None, headers = None
     table = EnhancedTable.from_table(table,sheet)
     return table
 
-def gettablesize(sheet,startcolumn,startrow, absolute = False):
+def gettablesize(sheet,startcolumn,startrow, absolute = False, greedycolumns = False, greedyrows = False):
     """ This is a function to intuit the shape of a data series which is laid out in a table format.
 
         It works by assuming the top row to be the header row. It scans this row until it reaches a blank cell.
@@ -255,7 +277,10 @@ def gettablesize(sheet,startcolumn,startrow, absolute = False):
 
         The absolute keyword determines whether the returned range is absolute (default False).
 
-        e.x.- Table Starting at (1,1) [A1]
+        greedycolumns and greedyrows allow for the given number of blank, consecutive columns or rows (respectively) to be
+        skipped when determining the table size.
+
+        e.x.- Table Starting at (1,1) [A1] with no greedy columns or rows
         ---------------
         |W   X   Y   Z|
         |1   2   3    |
@@ -268,23 +293,35 @@ def gettablesize(sheet,startcolumn,startrow, absolute = False):
     """
     row,column = startrow,startcolumn
     cell = sheet.cell(row = row, column = column)
-    while cell.value:
+    blank = int(not bool(cell.value))
+    ## If cell is blank is not blank under any circumstances it should be counted
+    ## If greedycolumns then continue on the first blank if current cell is blank
+    while not blank or (greedycolumns and blank <= greedycolumns):
         column += 1
         cell = sheet.cell(row = row, column = column)
+        if cell.value: blank = 0
+        else: blank +=1 
 
-    endcolumn = column - 1 
-    def checkrow(row):
+    endcolumn = column - blank 
+    if endcolumn < startcolumn:
+        return None
+
+    ## Check row 
+    def blankrow(row):
         col = 1
         while col <= endcolumn:
             if sheet.cell(row = row, column = col).value:
-                return True
+                return False
             col += 1
+        return True
     ## Start check table data 
     row = 2 
-    rowhasvalue = checkrow(row)
-    while rowhasvalue:
+    norow = int(blankrow(row))
+    ## See notes above on greedycolumns
+    while not norow or (greedyrows and norow <= greedyrows):
         row += 1
-        rowhasvalue = checkrow(row)
+        if blankrow(row): norow += 1
+        else: norow = 0
     ## Current Row does not have value
-    endrow = row - 1
+    endrow = row - norow
     return tuple_to_range(startcolumn,startrow,endcolumn,endrow, absolute = absolute)
