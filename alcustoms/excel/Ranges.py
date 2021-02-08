@@ -82,6 +82,11 @@ class Range():
     def range(self):
         return f"{self.startcoord.toA1string()}:{self.endcoord.toA1string()}"
 
+    @property
+    def range_boundaries(self):
+        """ Returns the results of openpyxl.utils.cell.range_boundaries, which is a tuple (min_col, min_row, max_col, max_row) """
+        return utils.cell.range_boundaries(self.range)
+
     def rows_from_range(self,attribute = "value"):
         """ Returns cell property per openpyxl.utils.cell.rows_from_range
         
@@ -94,9 +99,16 @@ class Range():
             return (map(lambda cell: self.worksheet[cell], row) for row in utils.cell.rows_from_range(self.range))
         return (map(lambda cell: getattr(self.worksheet[cell],attribute), row) for row in utils.cell.rows_from_range(self.range))
 
-    def columns_from_range(self):
-        """ Returns the cell values for the result of utils.cell.cols_from_range using self.sheet """
-        return (map(lambda cell: self.worksheet[cell].value, column) for column in utils.cell.cols_from_range(self.range))
+    def columns_from_range(self, attribute = "value"):
+        """Returns cell property per openpyxl.utils.cell.rows_from_range
+        
+        If attribute is "address," functions as openpyxl.utils.cell.cols_from_range
+        If attribute is "cell," returns cell references instead."""
+        if attribute == "address":
+            return utils.cell.cols_from_range(self.range)
+        if attribute == "cell":
+            return (map(lambda cell: self.worksheet[cell], column) for column in utils.cell.cols_from_range(self.range))
+        return (map(lambda cell: getattr(self.worksheet[cell],attribute), column) for column in utils.cell.cols_from_range(self.range))
 
     def cells_by_row(self,attribute = "value"):
         """ Returns a flat list of cells based on rows_from_range
@@ -190,7 +202,7 @@ class Range():
             raise ValueError(f"Subrange coordinates out of Range: R[{self.masterstart.row}]C[{self.masterstart.column}] : R[{self.masterend.row}]C[{self.masterend.column}] <> R[{start.row}]C[{start.column}] : R[{end.row}]C[{end.column}]")
 
         return Range(self.worksheet,f"{start.column_letter}{start.row}:{end.column_letter}{end.row}")
-        
+
     def __eq__(self,other):
         if isinstance(other,Range):
             return self.worksheet == other.worksheet and self.startcoord == other.startcoord and self.endcoord == other.endcoord
