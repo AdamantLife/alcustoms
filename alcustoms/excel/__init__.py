@@ -36,7 +36,7 @@ def maxcolumnwidth(worksheet, column, start_row = None, end_row = None):
         cell = worksheet.cell(row, column)
         if cell.coordinate in worksheet.merged_cells:
             continue
-        v = cell.value if cell.value is not None else ""
+        v = str(cell.value) if cell.value is not None else ""
         _max = max(_max, len(v))
 
     return _max
