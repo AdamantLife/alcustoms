@@ -19,7 +19,7 @@ class EnhancedTable(Table):
     """ A better Table Class, returned by get_all_tables """
     def from_table(table,worksheet):
         def oldversion():
-            ## NOTE! It seems that Initializing a Table object (which EnhancedTable is a subclass of) automatically adds the table to the Worksheet's _tables list
+            ## NOTE! (oldversion) It seems that Initializing a Table object (which EnhancedTable is a subclass of) automatically adds the table to the Worksheet's _tables list
             ## This means that we have to check and remove the original Table object, and should return any pre-built EnhancedTable we find.
             oldtables = [tab for tab in worksheet._tables if tab == table]
             for tab in oldtables:
@@ -28,15 +28,12 @@ class EnhancedTable(Table):
                 ## Remove the old-style one
                 else:
                     worksheet._tables.remove(tab)
-        def newversion():
-            if table.name in worksheet._tables:
-                if isinstance((ntable := worksheet._tables[table.name]), EnhancedTable):
-                    return ntable
-                del worksheet._tables[table.name]
 
         ## New version of openpyxl changes worksheet._tables to a dict subclass
-        if isinstance(worksheet._tables, dict): newversion()
-        else: oldversion()
+        ## Have to manually manipulate worksheet._tables for old version
+        if not isinstance(worksheet._tables, dict):
+            oldversion()
+        
         ## If no EnhancedTable version found, create one (which- again- seems to automatically be added to the _tables list)
         return EnhancedTable(worksheet = worksheet,
                              id=table.id, displayName=table.displayName, ref=table.ref, name=table.name, comment=table.comment, tableType=table.tableType,
