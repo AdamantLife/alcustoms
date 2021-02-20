@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="alcustoms-AdamantLife",
-    version="0.0.1",
+    version="1.0.1",
     author="AdamantLife",
     author_email="",
     description="A collection of code snippets and high-level interfaces",
@@ -26,7 +26,6 @@ setuptools.setup(
         "google-api-python-client",
         "matplotlib",
         "numpy",
-        "openpyxl",
         "pillow",
         "requests",
         ## "pywin32",
