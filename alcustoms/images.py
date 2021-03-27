@@ -2,7 +2,7 @@ import binascii ## rgb2hex
 import colorsys ## addbevelbordertoimage
 import struct ## hex2rgb,rgb2hex
 ## Third Party
-from alcustoms.web.urllib import getimagefromurl
+from al_web.urllib import getimagefromurl
 import PIL.Image,PIL.ImageDraw,PIL.ImageOps ## addbevelbordertoimage,addflatbordertoimag
 
 def hex2rgb(hexstring):

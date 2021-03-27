@@ -20,16 +20,15 @@ setuptools.setup(
     ],
     python_requires='>=3.8',
     install_requires=[
-        "bs4",
         "flask",
         "google",
         "google-api-python-client",
         "matplotlib",
         "numpy",
         "pillow",
-        "requests",
         ## "pywin32",
         "python-hosts",
-        "al-decorators @ git+https://github.com/AdamantLife/AL_Decorators"
+        "al-decorators @ git+https://github.com/AdamantLife/AL_Decorators",
+        "al-web @ git+https://github.com/AdamantLife/AL_Web"
         ]
 )
