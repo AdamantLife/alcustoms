@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="alcustoms",
-    version="1.0.1",
+    version="2.0.0",
     author="AdamantLife",
     author_email="",
     description="A collection of code snippets and high-level interfaces",
