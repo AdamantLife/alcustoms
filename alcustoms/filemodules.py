@@ -144,10 +144,9 @@ def iterdir_re(pathobj, regexobj, test = pathlib.Path.is_file, as_string = False
         except (PermissionError,OSError) as e:
             if not access_errors:
                 raise e
-    if not recurse:
-        for obj in iterdir(pathobj):
-            yield obj
-    else:
+    for obj in iterdir(pathobj):
+        yield obj
+    if recurse:
         for dire in recurse_directory(pathobj, returnmethod="directory", skip_unaccess=access_errors):
             for obj in iterdir(dire):
                 yield obj
